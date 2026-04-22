@@ -1,4 +1,4 @@
-export type CreditStatus = 'Pendente' | 'Aprovado' | 'Aprovado com acompanhamento' | 'Reprovado'
+export type CreditStatus = 'Pendente' | 'Aprovado' | 'Reprovado'
 
 export interface CreditRequest {
   id: string
@@ -8,14 +8,20 @@ export interface CreditRequest {
   quantity: number
   deliveryAddress: string
   requesterEmail: string
+
+  empresa: string
+  uf: string
+  unidadeNegocio: string
+
+  status: CreditStatus
+  requiresFollowUp: boolean
+  denialReasons?: string[]
+  denialReason?: string
+  additionalInfo?: string
+  infoRequestDate?: string
+  analysisDate?: string
+  createdAt: string
+
   documentation?: string
   notes?: string
-  status: CreditStatus
-  paymentCondition?: string
-  denialReason?: string
-  requiresFollowUp: boolean
-  followUpPeriod?: string
-  createdAt: string
-  analysisDate?: string
-  additionalInfo?: string
 }

@@ -3,7 +3,11 @@ import { CreditRequest } from '@/types/credit'
 
 interface CreditContextType {
   credits: CreditRequest[]
-  addCredit: (credit: Omit<CreditRequest, 'id' | 'status' | 'createdAt'>) => void
+  addCredit: (
+    credit: Omit<CreditRequest, 'id' | 'status' | 'createdAt' | 'requiresFollowUp'> & {
+      requiresFollowUp?: boolean
+    },
+  ) => void
   updateCreditStatus: (id: string, updates: Partial<CreditRequest>) => void
 }
 
@@ -16,8 +20,10 @@ const mockData: CreditRequest[] = [
     quantity: 10,
     deliveryAddress: 'Av. Paulista, 1000 - SP',
     requesterEmail: 'carlos@vendas.com',
+    empresa: 'JOHN',
+    uf: 'SP',
+    unidadeNegocio: 'Vendas Corporativas',
     status: 'Aprovado',
-    paymentCondition: '30/60/90 dias',
     requiresFollowUp: false,
     createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
     analysisDate: new Date(Date.now() - 86400000 * 1).toISOString(),
@@ -30,8 +36,11 @@ const mockData: CreditRequest[] = [
     quantity: 2,
     deliveryAddress: 'Rua do Comércio, 500 - RJ',
     requesterEmail: 'ana@vendas.com',
+    empresa: 'TUIM',
+    uf: 'RJ',
+    unidadeNegocio: 'Varejo',
     status: 'Reprovado',
-    denialReason: 'Score Negativo',
+    denialReasons: ['Score Negativo', 'Endereço'],
     requiresFollowUp: false,
     createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     analysisDate: new Date().toISOString(),
@@ -44,6 +53,9 @@ const mockData: CreditRequest[] = [
     quantity: 5,
     deliveryAddress: 'Distrito Industrial, S/N - MG',
     requesterEmail: 'marcos@vendas.com',
+    empresa: 'JOHN',
+    uf: 'MG',
+    unidadeNegocio: 'Indústria',
     status: 'Pendente',
     requiresFollowUp: false,
     createdAt: new Date().toISOString(),
@@ -56,9 +68,12 @@ const mockData: CreditRequest[] = [
     quantity: 12,
     deliveryAddress: 'Av. Brasil, 200 - SP',
     requesterEmail: 'joao@vendas.com',
-    status: 'Aprovado com acompanhamento',
+    empresa: 'TUIM',
+    uf: 'SP',
+    unidadeNegocio: 'Serviços',
+    status: 'Aprovado',
     requiresFollowUp: true,
-    followUpPeriod: 'Mensal',
+    additionalInfo: 'Monitorar pagamentos dos primeiros 3 meses.',
     createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
     analysisDate: new Date(Date.now() - 86400000 * 4).toISOString(),
   },
@@ -69,12 +84,13 @@ const CreditContext = createContext<CreditContextType | undefined>(undefined)
 export function CreditProvider({ children }: { children: ReactNode }) {
   const [credits, setCredits] = useState<CreditRequest[]>(mockData)
 
-  const addCredit = (creditData: Omit<CreditRequest, 'id' | 'status' | 'createdAt'>) => {
+  const addCredit = (creditData: any) => {
     const newCredit: CreditRequest = {
       ...creditData,
       id: `CRD-${String(credits.length + 1).padStart(3, '0')}`,
       status: 'Pendente',
       createdAt: new Date().toISOString(),
+      requiresFollowUp: false,
     }
     setCredits((prev) => [newCredit, ...prev])
   }

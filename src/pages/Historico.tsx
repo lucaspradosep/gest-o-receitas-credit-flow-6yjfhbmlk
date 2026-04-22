@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { useCredit } from '@/context/credit-context'
 import { CreditRequest } from '@/types/credit'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils'
 import { DetailsSheet } from '@/components/history/details-sheet'
 import { useRole } from '@/context/role-context'
 import {
@@ -40,28 +40,26 @@ export default function Historico() {
       c.document.includes(searchTerm)
 
     if (statusFilter === 'Todos') return matchesSearch
-    if (statusFilter === 'Aprovados')
-      return (
-        matchesSearch && (c.status === 'Aprovado' || c.status === 'Aprovado com acompanhamento')
-      )
+    if (statusFilter === 'Aprovados') return matchesSearch && c.status === 'Aprovado'
     if (statusFilter === 'Reprovados') return matchesSearch && c.status === 'Reprovado'
     if (statusFilter === 'Pendentes') return matchesSearch && c.status === 'Pendente'
 
     return matchesSearch
   })
 
-  const getStatusBadgeVariant = (status: string) => {
-    if (status === 'Aprovado' || status === 'Aprovado com acompanhamento') return 'default'
-    if (status === 'Reprovado') return 'destructive'
+  const getStatusBadgeVariant = (credit: CreditRequest) => {
+    if (credit.status === 'Aprovado') return 'default'
+    if (credit.status === 'Reprovado') return 'destructive'
     return 'secondary'
   }
 
-  const displayStatus = (status: string) => {
+  const displayStatus = (credit: CreditRequest) => {
     if (isComercial) {
-      if (status === 'Pendente') return 'Ainda está pendente'
-      if (status === 'Aprovado com acompanhamento') return 'Aprovado'
+      if (credit.status === 'Pendente') return 'Ainda está pendente'
+      if (credit.status === 'Aprovado' && credit.requiresFollowUp) return 'Aprovado'
     }
-    return status
+    if (credit.status === 'Aprovado' && credit.requiresFollowUp) return 'Aprovado (Acomp.)'
+    return credit.status
   }
 
   return (
@@ -111,7 +109,7 @@ export default function Historico() {
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead className="pl-6">Data</TableHead>
+                <TableHead className="pl-6">Data {isComercial ? '' : 'e Hora'}</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>CNPJ</TableHead>
                 <TableHead>Valor</TableHead>
@@ -132,8 +130,10 @@ export default function Historico() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => setSelectedCredit(credit)}
                   >
-                    <TableCell className="pl-6 font-medium">
-                      {formatDate(credit.createdAt)}
+                    <TableCell className="pl-6 font-medium whitespace-nowrap">
+                      {isComercial
+                        ? formatDate(credit.createdAt)
+                        : formatDateTime(credit.createdAt)}
                     </TableCell>
                     <TableCell>
                       <div className="font-semibold">{credit.clientName}</div>
@@ -144,9 +144,7 @@ export default function Historico() {
                       <div className="font-medium text-primary">{formatCurrency(credit.value)}</div>
                     </TableCell>
                     <TableCell className="pr-6">
-                      <Badge variant={getStatusBadgeVariant(credit.status)}>
-                        {displayStatus(credit.status)}
-                      </Badge>
+                      <Badge variant={getStatusBadgeVariant(credit)}>{displayStatus(credit)}</Badge>
                     </TableCell>
                   </TableRow>
                 ))

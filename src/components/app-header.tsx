@@ -89,10 +89,11 @@ export function AppHeader() {
               src={
                 role === 'Comercial'
                   ? 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2'
-                  : 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=12'
+                  : '/grupo-john.png'
               }
+              className="object-cover"
             />
-            <AvatarFallback>{role === 'Comercial' ? 'UP' : 'AD'}</AvatarFallback>
+            <AvatarFallback>{role === 'Comercial' ? 'UP' : 'GJ'}</AvatarFallback>
           </Avatar>
         </div>
       </div>

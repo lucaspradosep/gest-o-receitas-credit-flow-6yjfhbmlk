@@ -3,31 +3,30 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { useCredit } from '@/context/credit-context'
 import { CreditRequest, CreditStatus } from '@/types/credit'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { Navigate } from 'react-router-dom'
 import { useRole } from '@/context/role-context'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { toast } from 'sonner'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Send } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 
 export default function Feedback() {
   const { credits, updateCreditStatus } = useCredit()
   const { role } = useRole()
 
   const [selectedCreditId, setSelectedCreditId] = useState<string | null>(null)
-  const [status, setStatus] = useState<CreditStatus>('Pendente')
-  const [denialReason, setDenialReason] = useState('')
+  const [status, setStatus] = useState<CreditStatus | ''>('')
+  const [requiresFollowUp, setRequiresFollowUp] = useState(false)
+  const [denialReasons, setDenialReasons] = useState<string[]>([])
   const [additionalInfo, setAdditionalInfo] = useState('')
+  const [infoRequestDate, setInfoRequestDate] = useState('')
+  const [creditValue, setCreditValue] = useState<number>(0)
   const [sendEmail, setSendEmail] = useState(true)
 
   if (role === 'Comercial') {
@@ -39,32 +38,35 @@ export default function Feedback() {
 
   const handleSelect = (credit: CreditRequest) => {
     setSelectedCreditId(credit.id)
-    setStatus('Pendente')
-    setDenialReason('')
-    setAdditionalInfo('')
+    setStatus(credit.status === 'Pendente' ? '' : credit.status)
+    setRequiresFollowUp(credit.requiresFollowUp || false)
+    setDenialReasons(credit.denialReasons || (credit.denialReason ? [credit.denialReason] : []))
+    setAdditionalInfo(credit.additionalInfo || '')
+    setInfoRequestDate(credit.infoRequestDate || '')
+    setCreditValue(credit.value || 0)
   }
 
   const handleSubmit = () => {
     if (!selectedCredit) return
 
-    if (status === 'Pendente') {
-      toast.error('Selecione Aprovado, Aprovado com acompanhamento ou Reprovado para prosseguir.')
+    if (!status || status === 'Pendente') {
+      toast.error('Selecione Aprovado ou Reprovado para prosseguir.')
       return
     }
 
-    if (status === 'Reprovado' && !denialReason) {
-      toast.error('Selecione o motivo da reprovação.')
+    if (status === 'Reprovado' && denialReasons.length === 0) {
+      toast.error('Selecione ao menos um motivo da reprovação.')
       return
     }
-
-    const isFollowUp = status === 'Aprovado com acompanhamento'
 
     updateCreditStatus(selectedCredit.id, {
       status,
-      denialReason: status === 'Reprovado' ? denialReason : undefined,
-      requiresFollowUp: isFollowUp,
-      analysisDate: new Date().toISOString(),
+      denialReasons: status === 'Reprovado' ? denialReasons : undefined,
+      requiresFollowUp: status === 'Aprovado' ? requiresFollowUp : false,
       additionalInfo,
+      infoRequestDate,
+      value: creditValue,
+      analysisDate: new Date().toISOString(),
     })
 
     if (sendEmail) {
@@ -79,7 +81,7 @@ export default function Feedback() {
   }
 
   return (
-    <div className="space-y-6 animate-slide-up max-w-5xl mx-auto">
+    <div className="space-y-6 animate-slide-up max-w-6xl mx-auto">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Aba Devolutiva</h2>
         <p className="text-muted-foreground">
@@ -87,8 +89,8 @@ export default function Feedback() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-sm h-[600px] flex flex-col">
+      <div className="grid gap-6 md:grid-cols-12">
+        <Card className="shadow-sm h-[650px] flex flex-col md:col-span-5 lg:col-span-4">
           <CardHeader className="pb-3">
             <CardTitle>Solicitações Pendentes</CardTitle>
             <CardDescription>{pendingCredits.length} aguardando análise</CardDescription>
@@ -110,14 +112,14 @@ export default function Feedback() {
                   onClick={() => handleSelect(credit)}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <span className="font-semibold">{credit.clientName}</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {formatDate(credit.createdAt)}
+                    <span className="font-semibold truncate pr-2">{credit.clientName}</span>
+                    <Badge variant="secondary" className="text-xs shrink-0">
+                      {formatDateTime(credit.createdAt).split(' ')[0]}
                     </Badge>
                   </div>
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>{formatCurrency(credit.value)}</span>
-                    <span>{credit.requesterEmail}</span>
+                    <span className="truncate pl-2">{credit.requesterEmail}</span>
                   </div>
                 </div>
               ))
@@ -125,9 +127,9 @@ export default function Feedback() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm h-[600px] flex flex-col">
+        <Card className="shadow-sm h-[650px] flex flex-col md:col-span-7 lg:col-span-8">
           <CardHeader className="pb-3 border-b">
-            <CardTitle>Parecer de Análise</CardTitle>
+            <CardTitle>Parecer de Análise Interna</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-6 space-y-6">
             {!selectedCredit ? (
@@ -136,75 +138,128 @@ export default function Feedback() {
               </div>
             ) : (
               <div className="space-y-6 animate-fade-in">
-                <div className="space-y-3 bg-muted/30 p-4 rounded-lg border">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-xs text-muted-foreground">Data Solicitação</span>
-                      <p className="font-medium text-sm">{formatDate(selectedCredit.createdAt)}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground">Data da Análise</span>
-                      <p className="font-medium text-sm">{formatDate(new Date().toISOString())}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground">Nome do Cliente</span>
-                    <p className="font-medium text-sm">{selectedCredit.clientName}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground">Valor</span>
-                    <p className="font-medium text-sm">{formatCurrency(selectedCredit.value)}</p>
-                  </div>
-                </div>
-
                 <div className="space-y-4 pt-2">
-                  <div className="space-y-2">
-                    <Label>Status da Análise *</Label>
-                    <Select value={status} onValueChange={(v: CreditStatus) => setStatus(v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pendente">Pendente</SelectItem>
-                        <SelectItem value="Aprovado">Aprovado</SelectItem>
-                        <SelectItem value="Aprovado com acompanhamento">
-                          Aprovado com acompanhamento
-                        </SelectItem>
-                        <SelectItem value="Reprovado">Reprovado</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Data da Solicitação (Automática)</Label>
+                      <Input
+                        value={formatDateTime(selectedCredit.createdAt)}
+                        readOnly
+                        className="bg-muted text-muted-foreground"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Data Solicitação Informações (Opcional)</Label>
+                      <Input
+                        type="date"
+                        value={infoRequestDate}
+                        onChange={(e) => setInfoRequestDate(e.target.value)}
+                      />
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Data (Análise Atual)</Label>
+                      <Input
+                        value={new Date().toISOString().split('T')[0]}
+                        readOnly
+                        className="bg-muted text-muted-foreground"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Valor do Pedido / Aprovado (R$)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={creditValue}
+                        onChange={(e) => setCreditValue(Number(e.target.value))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Cliente</Label>
+                    <Input
+                      value={selectedCredit.clientName}
+                      readOnly
+                      className="bg-muted text-muted-foreground"
+                    />
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label className="text-base font-semibold">Status da Análise *</Label>
+                    <RadioGroup
+                      value={status}
+                      onValueChange={(v: CreditStatus) => setStatus(v)}
+                      className="flex flex-wrap gap-6 pt-1"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Aprovado" id="status-aprovado" />
+                        <Label htmlFor="status-aprovado" className="font-medium cursor-pointer">
+                          Aprovado
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Reprovado" id="status-reprovado" />
+                        <Label htmlFor="status-reprovado" className="font-medium cursor-pointer">
+                          Reprovado
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {status === 'Aprovado' && (
+                    <div className="flex items-center space-x-3 bg-primary/5 p-4 rounded-md border border-primary/20 animate-in fade-in duration-200">
+                      <Switch
+                        id="requires-followup"
+                        checked={requiresFollowUp}
+                        onCheckedChange={setRequiresFollowUp}
+                      />
+                      <Label
+                        htmlFor="requires-followup"
+                        className="cursor-pointer font-medium text-primary"
+                      >
+                        Aprovado com acompanhamento
+                      </Label>
+                    </div>
+                  )}
 
                   {status === 'Reprovado' && (
-                    <div className="space-y-2 animate-fade-in-up">
-                      <Label className="text-destructive">Motivo da Reprovação (Interno) *</Label>
-                      <Select value={denialReason} onValueChange={setDenialReason}>
-                        <SelectTrigger className="border-destructive/50 focus:ring-destructive">
-                          <SelectValue placeholder="Selecione o motivo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Score Negativo">Score Negativo</SelectItem>
-                          <SelectItem value="Endereço">Endereço</SelectItem>
-                          <SelectItem value="Fraude">Fraude</SelectItem>
-                          <SelectItem value="Inadimplência na Praça">
-                            Inadimplência na Praça
-                          </SelectItem>
-                          <SelectItem value="Documentação Incompleta">
-                            Documentação Incompleta
-                          </SelectItem>
-                          <SelectItem value="Outros">Outros</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground mt-1">
+                    <div className="space-y-3 p-4 bg-destructive/5 rounded-md border border-destructive/20 animate-in fade-in duration-200">
+                      <Label className="text-destructive font-semibold">
+                        Motivos da Reprovação (Uso Interno) *
+                      </Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                        {['Score Negativo', 'Endereço', 'Fraude', 'Outros'].map((reason) => (
+                          <div className="flex items-center space-x-2" key={reason}>
+                            <Checkbox
+                              id={`reason-${reason}`}
+                              checked={denialReasons.includes(reason)}
+                              onCheckedChange={(c) => {
+                                if (c) setDenialReasons([...denialReasons, reason])
+                                else setDenialReasons(denialReasons.filter((r) => r !== reason))
+                              }}
+                            />
+                            <Label
+                              htmlFor={`reason-${reason}`}
+                              className="text-sm font-normal cursor-pointer leading-none"
+                            >
+                              {reason}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground pt-1">
                         O Comercial verá apenas um aviso padrão LGPD.
                       </p>
                     </div>
                   )}
 
-                  <div className="space-y-2 animate-fade-in-up">
-                    <Label>Informações Complementares</Label>
+                  <div className="space-y-2 pt-2">
+                    <Label>Retorno / Notas Internas</Label>
                     <Textarea
-                      placeholder="Observações internas adicionais..."
+                      placeholder="Observações adicionais para gestão..."
                       value={additionalInfo}
                       onChange={(e) => setAdditionalInfo(e.target.value)}
                       className="resize-none h-20"
@@ -214,18 +269,18 @@ export default function Feedback() {
                   <div className="flex items-center space-x-2 pt-4 border-t">
                     <Switch id="sendEmail" checked={sendEmail} onCheckedChange={setSendEmail} />
                     <Label htmlFor="sendEmail" className="font-normal cursor-pointer text-sm">
-                      Enviar e-mail automático com o resultado para{' '}
+                      Enviar e-mail de notificação para{' '}
                       <span className="font-semibold">{selectedCredit.requesterEmail}</span>
                     </Label>
                   </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-2">
                   <Button
                     className="w-full gap-2"
                     size="lg"
                     onClick={handleSubmit}
-                    disabled={status === 'Pendente'}
+                    disabled={!status || status === 'Pendente'}
                   >
                     <Send className="h-4 w-4" />
                     Registrar Devolutiva

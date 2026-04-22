@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import {
   Sheet,
   SheetContent,
@@ -7,7 +6,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { CreditRequest } from '@/types/credit'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useRole } from '@/context/role-context'
@@ -26,7 +25,7 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
   const isRevenueMgmt = role === 'Gestão de Receitas'
 
   const getStatusBadgeVariant = (s: string) => {
-    if (s === 'Aprovado' || s === 'Aprovado com acompanhamento') return 'default'
+    if (s === 'Aprovado') return 'default'
     if (s === 'Reprovado') return 'destructive'
     return 'secondary'
   }
@@ -34,8 +33,9 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
   const displayStatus = (status: string) => {
     if (!isRevenueMgmt) {
       if (status === 'Pendente') return 'Ainda está pendente'
-      if (status === 'Aprovado com acompanhamento') return 'Aprovado'
+      if (status === 'Aprovado' && credit.requiresFollowUp) return 'Aprovado'
     }
+    if (status === 'Aprovado' && credit.requiresFollowUp) return 'Aprovado (Acomp.)'
     return status
   }
 
@@ -57,7 +57,7 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
             </div>
             <div className="text-right">
               <h4 className="text-sm font-medium text-muted-foreground mb-1">Data Solicitação</h4>
-              <p className="text-sm font-medium">{formatDate(credit.createdAt)}</p>
+              <p className="text-sm font-medium">{formatDateTime(credit.createdAt)}</p>
             </div>
           </div>
 
@@ -65,14 +65,21 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
 
           <div className="grid gap-4">
             <DetailItem
-              label="Valor Solicitado"
+              label="Valor"
               value={formatCurrency(credit.value)}
               valueClass="text-2xl font-bold text-primary"
             />
+
             <div className="grid grid-cols-2 gap-4">
-              <DetailItem label="Quantidade" value={`${credit.quantity} itens`} />
-              <DetailItem label="CNPJ" value={credit.document} />
+              <DetailItem label="Empresa" value={credit.empresa} />
+              <DetailItem label="Unidade de Negócio" value={credit.unidadeNegocio} />
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <DetailItem label="CNPJ" value={credit.document} />
+              <DetailItem label="UF" value={credit.uf} />
+            </div>
+
             <DetailItem label="Endereço de Entrega" value={credit.deliveryAddress} />
             <DetailItem label="E-mail Solicitante" value={credit.requesterEmail} />
           </div>
@@ -102,14 +109,19 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
           <Separator />
 
           <div className="space-y-4">
-            {credit.status === 'Aprovado' && (
+            {credit.status === 'Aprovado' && !credit.requiresFollowUp && (
               <div className="bg-primary/5 p-4 rounded-lg border border-primary/20 space-y-3">
                 <h4 className="font-medium text-primary">Detalhes da Aprovação</h4>
                 <p className="text-sm">O crédito foi aprovado para este cliente.</p>
+                {isRevenueMgmt && credit.additionalInfo && (
+                  <div className="mt-2">
+                    <DetailItem label="Retorno / Notas" value={credit.additionalInfo} />
+                  </div>
+                )}
               </div>
             )}
 
-            {credit.status === 'Aprovado com acompanhamento' && (
+            {credit.status === 'Aprovado' && credit.requiresFollowUp && (
               <div className="bg-primary/5 p-4 rounded-lg border border-primary/20 space-y-3">
                 <h4 className="font-medium text-primary">Aprovado</h4>
                 {isRevenueMgmt && (
@@ -118,6 +130,11 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
                   </p>
                 )}
                 <p className="text-sm">O crédito foi aprovado.</p>
+                {isRevenueMgmt && credit.additionalInfo && (
+                  <div className="mt-2">
+                    <DetailItem label="Retorno / Notas" value={credit.additionalInfo} />
+                  </div>
+                )}
               </div>
             )}
 
@@ -127,20 +144,22 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
                 {isRevenueMgmt ? (
                   <>
                     <DetailItem
-                      label="Motivo (Uso Interno)"
-                      value={credit.denialReason || 'Não informado'}
+                      label="Motivos (Uso Interno)"
+                      value={
+                        credit.denialReasons?.join(', ') || credit.denialReason || 'Não informado'
+                      }
                     />
                     {credit.additionalInfo && (
                       <div className="mt-2">
                         <DetailItem
-                          label="Informações Complementares"
+                          label="Informações Complementares / Retorno"
                           value={credit.additionalInfo}
                         />
                       </div>
                     )}
                   </>
                 ) : (
-                  <p className="text-sm font-medium text-foreground p-2 bg-destructive/10 rounded border border-destructive/20">
+                  <p className="text-sm font-medium text-foreground p-3 bg-destructive/10 rounded border border-destructive/20 leading-relaxed">
                     Favor declinar, por motivos de resguardo legal e em virtude da lei da LGPD, não
                     divulgamos maiores informações.
                   </p>
@@ -159,7 +178,7 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
             {isRevenueMgmt && credit.analysisDate && (
               <div className="text-right pt-4">
                 <span className="text-xs text-muted-foreground">
-                  Analisado em: {formatDate(credit.analysisDate)}
+                  Analisado em: {formatDateTime(credit.analysisDate)}
                 </span>
               </div>
             )}

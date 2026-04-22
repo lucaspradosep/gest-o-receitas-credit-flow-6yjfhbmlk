@@ -14,13 +14,53 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useCredit } from '@/context/credit-context'
 import { SubmissionModal } from '@/components/form/submission-modal'
+
+const UFS = [
+  'AC',
+  'AL',
+  'AP',
+  'AM',
+  'BA',
+  'CE',
+  'DF',
+  'ES',
+  'GO',
+  'MA',
+  'MT',
+  'MS',
+  'MG',
+  'PA',
+  'PB',
+  'PR',
+  'PE',
+  'PI',
+  'RJ',
+  'RN',
+  'RS',
+  'RO',
+  'RR',
+  'SC',
+  'SP',
+  'SE',
+  'TO',
+]
 
 const formSchema = z.object({
   requesterEmail: z.string().email('Email inválido'),
   clientName: z.string().min(3, 'Nome do cliente é obrigatório'),
   document: z.string().min(14, 'CNPJ inválido (mín. 14 caracteres)'),
+  empresa: z.string().min(1, 'Selecione a empresa'),
+  uf: z.string().min(2, 'Selecione a UF'),
+  unidadeNegocio: z.string().min(1, 'Unidade de Negócio é obrigatória'),
   value: z.coerce.number().min(1, 'Valor deve ser maior que 0'),
   quantity: z.coerce.number().min(1, 'Quantidade deve ser maior que 0'),
   deliveryAddress: z.string().min(5, 'Endereço é obrigatório'),
@@ -40,6 +80,9 @@ export default function NovaAnalise() {
       requesterEmail: '',
       clientName: '',
       document: '',
+      empresa: '',
+      uf: '',
+      unidadeNegocio: '',
       value: undefined,
       quantity: 1,
       deliveryAddress: '',
@@ -51,7 +94,7 @@ export default function NovaAnalise() {
   const onSubmit = (data: FormValues) => {
     setIsSubmitting(true)
     setTimeout(() => {
-      addCredit({ ...data, requiresFollowUp: false })
+      addCredit(data)
     }, 4000)
   }
 
@@ -159,12 +202,73 @@ export default function NovaAnalise() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Novas segmentações */}
+                  <FormField
+                    control={form.control}
+                    name="empresa"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Empresa *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="JOHN">JOHN</SelectItem>
+                            <SelectItem value="TUIM">TUIM</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="unidadeNegocio"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unidade de Negócio *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Vendas Corporativas" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="uf"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>UF (Estado de Entrega) *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {UFS.map((uf) => (
+                              <SelectItem key={uf} value={uf}>
+                                {uf}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="deliveryAddress"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel>Endereço de Entrega *</FormLabel>
+                        <FormLabel>Endereço Completo de Entrega *</FormLabel>
                         <FormControl>
                           <Input placeholder="Rua, Número, Bairro, Cidade - UF" {...field} />
                         </FormControl>
