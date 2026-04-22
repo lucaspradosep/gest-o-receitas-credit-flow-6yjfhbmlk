@@ -24,7 +24,7 @@ export function LoginDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () 
     e.preventDefault()
     if (email === 'faturamento@johnrichard.com.br' && password === 'john@123') {
       setIsAuthenticated(true)
-      setRole('Revenue Management')
+      setRole('Gestão de Receitas')
       toast.success('Login realizado com sucesso!')
       onClose()
       navigate('/')
@@ -39,7 +39,7 @@ export function LoginDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () 
         <DialogHeader>
           <DialogTitle>Acesso Restrito</DialogTitle>
           <DialogDescription>
-            Insira suas credenciais de Revenue Management para acessar.
+            Insira suas credenciais de Gestão de Receitas para acessar.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleLogin} className="space-y-4 py-4">

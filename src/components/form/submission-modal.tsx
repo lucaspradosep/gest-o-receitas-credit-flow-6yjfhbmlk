@@ -29,10 +29,10 @@ export function SubmissionModal({ isOpen, onSuccessComplete }: SubmissionModalPr
     }
 
     const timers = [
-      setTimeout(() => setStep(1), 800), // Validando
-      setTimeout(() => setStep(2), 2000), // Planilha
-      setTimeout(() => setStep(3), 3500), // Notificando
-      setTimeout(() => setStep(4), 4500), // Sucesso
+      setTimeout(() => setStep(1), 800),
+      setTimeout(() => setStep(2), 2000),
+      setTimeout(() => setStep(3), 3500),
+      setTimeout(() => setStep(4), 4500),
     ]
 
     return () => timers.forEach(clearTimeout)
@@ -81,11 +81,11 @@ export function SubmissionModal({ isOpen, onSuccessComplete }: SubmissionModalPr
             <DialogDescription className="text-base">
               Solicitação enviada com sucesso!
             </DialogDescription>
-            <div className="pt-4 flex gap-3 w-full">
+            <div className="pt-4 flex flex-col sm:flex-row gap-3 w-full">
               <Button variant="outline" className="flex-1" onClick={onSuccessComplete}>
                 Enviar outra solicitação
               </Button>
-              {role === 'Revenue Management' && (
+              {role === 'Gestão de Receitas' && (
                 <Button
                   className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                   onClick={() => {

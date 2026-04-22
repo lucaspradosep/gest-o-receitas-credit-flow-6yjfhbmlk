@@ -65,7 +65,7 @@ export default function NovaAnalise() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Nova Análise de Crédito</h2>
         <p className="text-muted-foreground">
-          Preencha os dados da solicitação para submeter ao Revenue Management.
+          Preencha os dados da solicitação para submeter à Gestão de Receitas.
         </p>
       </div>
 
@@ -87,7 +87,7 @@ export default function NovaAnalise() {
                     name="requesterEmail"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel>Email do Solicitante *</FormLabel>
+                        <FormLabel>E-mail do Solicitante *</FormLabel>
                         <FormControl>
                           <Input type="email" placeholder="seuemail@exemplo.com" {...field} />
                         </FormControl>

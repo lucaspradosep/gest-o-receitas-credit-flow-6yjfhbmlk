@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner'
 import { Switch } from '@/components/ui/switch'
 import { Send } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
 
 export default function Feedback() {
   const { credits, updateCreditStatus } = useCredit()
@@ -26,6 +27,7 @@ export default function Feedback() {
   const [selectedCreditId, setSelectedCreditId] = useState<string | null>(null)
   const [status, setStatus] = useState<CreditStatus>('Pendente')
   const [denialReason, setDenialReason] = useState('')
+  const [additionalInfo, setAdditionalInfo] = useState('')
   const [sendEmail, setSendEmail] = useState(true)
 
   if (role === 'Comercial') {
@@ -39,24 +41,30 @@ export default function Feedback() {
     setSelectedCreditId(credit.id)
     setStatus('Pendente')
     setDenialReason('')
+    setAdditionalInfo('')
   }
 
   const handleSubmit = () => {
     if (!selectedCredit) return
 
     if (status === 'Pendente') {
-      toast.error('Selecione Aprovado ou Negado para prosseguir.')
+      toast.error('Selecione Aprovado, Aprovado com acompanhamento ou Reprovado para prosseguir.')
       return
     }
 
-    if (status === 'Negado' && !denialReason) {
-      toast.error('Selecione o motivo da negação.')
+    if (status === 'Reprovado' && !denialReason) {
+      toast.error('Selecione o motivo da reprovação.')
       return
     }
+
+    const isFollowUp = status === 'Aprovado com acompanhamento'
 
     updateCreditStatus(selectedCredit.id, {
       status,
-      denialReason: status === 'Negado' ? denialReason : undefined,
+      denialReason: status === 'Reprovado' ? denialReason : undefined,
+      requiresFollowUp: isFollowUp,
+      analysisDate: new Date().toISOString(),
+      additionalInfo,
     })
 
     if (sendEmail) {
@@ -73,14 +81,14 @@ export default function Feedback() {
   return (
     <div className="space-y-6 animate-slide-up max-w-5xl mx-auto">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Reenvio do Chamado (Devolutiva)</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Aba Devolutiva</h2>
         <p className="text-muted-foreground">
           Gerencie e forneça parecer para as solicitações pendentes.
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-sm h-[500px] flex flex-col">
+        <Card className="shadow-sm h-[600px] flex flex-col">
           <CardHeader className="pb-3">
             <CardTitle>Solicitações Pendentes</CardTitle>
             <CardDescription>{pendingCredits.length} aguardando análise</CardDescription>
@@ -117,7 +125,7 @@ export default function Feedback() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm h-[500px] flex flex-col">
+        <Card className="shadow-sm h-[600px] flex flex-col">
           <CardHeader className="pb-3 border-b">
             <CardTitle>Parecer de Análise</CardTitle>
           </CardHeader>
@@ -128,17 +136,30 @@ export default function Feedback() {
               </div>
             ) : (
               <div className="space-y-6 animate-fade-in">
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-lg">{selectedCredit.clientName}</h3>
-                  <p className="text-sm text-muted-foreground">CNPJ: {selectedCredit.document}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Valor: {formatCurrency(selectedCredit.value)}
-                  </p>
+                <div className="space-y-3 bg-muted/30 p-4 rounded-lg border">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs text-muted-foreground">Data Solicitação</span>
+                      <p className="font-medium text-sm">{formatDate(selectedCredit.createdAt)}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">Data da Análise</span>
+                      <p className="font-medium text-sm">{formatDate(new Date().toISOString())}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Nome do Cliente</span>
+                    <p className="font-medium text-sm">{selectedCredit.clientName}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground">Valor</span>
+                    <p className="font-medium text-sm">{formatCurrency(selectedCredit.value)}</p>
+                  </div>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t">
+                <div className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label>Resultado da Análise *</Label>
+                    <Label>Status da Análise *</Label>
                     <Select value={status} onValueChange={(v: CreditStatus) => setStatus(v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione..." />
@@ -146,34 +167,49 @@ export default function Feedback() {
                       <SelectContent>
                         <SelectItem value="Pendente">Pendente</SelectItem>
                         <SelectItem value="Aprovado">Aprovado</SelectItem>
-                        <SelectItem value="Negado">Negado</SelectItem>
+                        <SelectItem value="Aprovado com acompanhamento">
+                          Aprovado com acompanhamento
+                        </SelectItem>
+                        <SelectItem value="Reprovado">Reprovado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {status === 'Negado' && (
+                  {status === 'Reprovado' && (
                     <div className="space-y-2 animate-fade-in-up">
-                      <Label className="text-destructive">Motivo da Negação *</Label>
+                      <Label className="text-destructive">Motivo da Reprovação (Interno) *</Label>
                       <Select value={denialReason} onValueChange={setDenialReason}>
                         <SelectTrigger className="border-destructive/50 focus:ring-destructive">
                           <SelectValue placeholder="Selecione o motivo" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Score Baixo">Score Baixo</SelectItem>
-                          <SelectItem value="Possível Fraude">Possível Fraude</SelectItem>
+                          <SelectItem value="Score Negativo">Score Negativo</SelectItem>
+                          <SelectItem value="Endereço">Endereço</SelectItem>
+                          <SelectItem value="Fraude">Fraude</SelectItem>
                           <SelectItem value="Inadimplência na Praça">
                             Inadimplência na Praça
                           </SelectItem>
                           <SelectItem value="Documentação Incompleta">
                             Documentação Incompleta
                           </SelectItem>
-                          <SelectItem value="Divergência Cadastral">
-                            Divergência Cadastral
-                          </SelectItem>
+                          <SelectItem value="Outros">Outros</SelectItem>
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        O Comercial verá apenas um aviso padrão LGPD.
+                      </p>
                     </div>
                   )}
+
+                  <div className="space-y-2 animate-fade-in-up">
+                    <Label>Informações Complementares</Label>
+                    <Textarea
+                      placeholder="Observações internas adicionais..."
+                      value={additionalInfo}
+                      onChange={(e) => setAdditionalInfo(e.target.value)}
+                      className="resize-none h-20"
+                    />
+                  </div>
 
                   <div className="flex items-center space-x-2 pt-4 border-t">
                     <Switch id="sendEmail" checked={sendEmail} onCheckedChange={setSendEmail} />
@@ -192,7 +228,7 @@ export default function Feedback() {
                     disabled={status === 'Pendente'}
                   >
                     <Send className="h-4 w-4" />
-                    Enviar Devolutiva
+                    Registrar Devolutiva
                   </Button>
                 </div>
               </div>

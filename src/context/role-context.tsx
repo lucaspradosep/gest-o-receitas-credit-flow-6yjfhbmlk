@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 
-type Role = 'Comercial' | 'Revenue Management'
+type Role = 'Comercial' | 'Gestão de Receitas'
 
 interface RoleContextType {
   role: Role

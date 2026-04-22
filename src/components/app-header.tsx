@@ -19,7 +19,7 @@ const routeTitles: Record<string, string> = {
   '/': 'Dashboard Executivo',
   '/nova-analise': 'Nova Análise de Crédito',
   '/historico': 'Histórico de Solicitações',
-  '/feedback': 'Reenvio do Chamado',
+  '/feedback': 'Aba Devolutiva',
 }
 
 export function AppHeader() {
@@ -30,7 +30,7 @@ export function AppHeader() {
   const navigate = useNavigate()
 
   const handleRoleChange = (newRole: any) => {
-    if (newRole === 'Revenue Management' && !isAuthenticated) {
+    if (newRole === 'Gestão de Receitas' && !isAuthenticated) {
       setIsLoginOpen(true)
     } else if (newRole === 'Comercial') {
       setRole('Comercial')
@@ -54,14 +54,14 @@ export function AppHeader() {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="w-48 hidden md:block">
+        <div className="w-56 hidden md:block">
           <Select value={role} onValueChange={handleRoleChange}>
             <SelectTrigger className="h-9">
               <SelectValue placeholder="Perfil" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Comercial">Perfil: Comercial</SelectItem>
-              <SelectItem value="Revenue Management">Perfil: Revenue Mgt</SelectItem>
+              <SelectItem value="Gestão de Receitas">Perfil: Gestão de Receitas</SelectItem>
             </SelectContent>
           </Select>
         </div>
