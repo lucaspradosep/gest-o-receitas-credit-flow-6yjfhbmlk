@@ -22,12 +22,12 @@ import { useRole } from '@/context/role-context'
 export default function Historico() {
   const { credits } = useCredit()
   const { role } = useRole()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCredit, setSelectedCredit] = useState<CreditRequest | null>(null)
 
   if (role === 'Comercial') {
     return <Navigate to="/nova-analise" replace />
   }
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCredit, setSelectedCredit] = useState<CreditRequest | null>(null)
 
   const filteredCredits = credits.filter(
     (c) =>
