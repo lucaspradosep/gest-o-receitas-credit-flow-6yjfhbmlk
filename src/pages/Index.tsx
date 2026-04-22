@@ -1,140 +1,212 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, CheckCircle2, Clock, TrendingUp, AlertCircle } from 'lucide-react'
+import { CheckCircle2, Clock, ShieldAlert, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useRevenue } from '@/context/revenue-context'
+import { useCredit } from '@/context/credit-context'
 import { formatCurrency } from '@/lib/utils'
+import {
+  Pie,
+  PieChart,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from 'recharts'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 
 export default function Index() {
-  const { revenues } = useRevenue()
+  const { credits } = useCredit()
 
-  const totalSent = revenues
-    .filter((r) => r.status === 'Concluído')
-    .reduce((acc, curr) => acc + curr.value, 0)
+  const totalAnalyses = credits.length
+  const approved = credits.filter((c) => c.status === 'Aprovado').length
+  const denied = credits.filter((c) => c.status === 'Reprovado').length
+  const pending = credits.filter((c) => c.status === 'Pendente').length
 
-  const pendingCount = revenues.filter((r) => r.status === 'Aguardando Processamento').length
+  const pieData = [
+    { name: 'Aprovado', value: approved, fill: 'hsl(var(--primary))' },
+    { name: 'Reprovado', value: denied, fill: 'hsl(var(--destructive))' },
+    { name: 'Pendente', value: pending, fill: 'hsl(var(--muted-foreground))' },
+  ]
+
+  const chartConfig = {
+    Aprovado: { label: 'Aprovado', color: 'hsl(var(--primary))' },
+    Reprovado: { label: 'Reprovado', color: 'hsl(var(--destructive))' },
+    Pendente: { label: 'Pendente', color: 'hsl(var(--muted-foreground))' },
+  }
+
+  const denialReasons = credits
+    .filter((c) => c.status === 'Reprovado' && c.denialReason)
+    .reduce(
+      (acc, curr) => {
+        acc[curr.denialReason!] = (acc[curr.denialReason!] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>,
+    )
+
+  const barData = Object.entries(denialReasons).map(([name, value]) => ({ name, value }))
+  const followUpQueue = credits.filter((c) => c.requiresFollowUp)
 
   return (
     <div className="space-y-6 animate-slide-up">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Visão Geral</h2>
-          <p className="text-muted-foreground">
-            Acompanhe os envios de receitas e status das automações.
-          </p>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard Executivo</h2>
+          <p className="text-muted-foreground">Métricas de aprovação e monitoramento de crédito.</p>
         </div>
         <Button
           asChild
           size="lg"
-          className="bg-secondary hover:bg-secondary/90 text-white w-full md:w-auto"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground w-full md:w-auto"
         >
-          <Link to="/nova-receita">Cadastrar Nova Receita</Link>
+          <Link to="/nova-analise">Nova Análise de Crédito</Link>
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="border-l-4 border-l-blue-500 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total de Análises (Mês)</CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalAnalyses}</div>
+            <p className="text-xs text-muted-foreground mt-1">Solicitações processadas</p>
+          </CardContent>
+        </Card>
         <Card className="border-l-4 border-l-primary shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Enviado (Mês)</CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
+            <CardTitle className="text-sm font-medium">Aprovados</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalSent)}</div>
-            <p className="text-xs text-muted-foreground mt-1">+12% em relação ao mês anterior</p>
+            <div className="text-2xl font-bold">{approved}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {totalAnalyses > 0 ? Math.round((approved / totalAnalyses) * 100) : 0}% do total
+            </p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-accent shadow-sm">
+        <Card className="border-l-4 border-l-destructive shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Aguardando Processamento</CardTitle>
-            <Clock className="h-4 w-4 text-accent" />
+            <CardTitle className="text-sm font-medium">Reprovados</CardTitle>
+            <ShieldAlert className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Sincronização pendente na planilha</p>
+            <div className="text-2xl font-bold">{denied}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {totalAnalyses > 0 ? Math.round((denied / totalAnalyses) * 100) : 0}% do total
+            </p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-secondary shadow-sm">
+        <Card className="border-l-4 border-l-muted-foreground shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Notificações Gestão</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-secondary" />
+            <CardTitle className="text-sm font-medium">SLA Pendente</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{revenues.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Alertas enviados com sucesso</p>
+            <div className="text-2xl font-bold">{pending}</div>
+            <p className="text-xs text-muted-foreground mt-1">Aguardando Revenue Mgt</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-7">
-        <Card className="md:col-span-5 shadow-sm">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="shadow-sm lg:col-span-1">
           <CardHeader>
-            <CardTitle>Últimas Receitas Enviadas</CardTitle>
-            <CardDescription>Você tem {revenues.length} registros recentes.</CardDescription>
+            <CardTitle>Aprovações vs Reprovações</CardTitle>
+            <CardDescription>Distribuição de status</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {revenues.slice(0, 5).map((rev) => (
-                <div
-                  key={rev.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border"
-                >
-                  <div className="flex flex-col gap-1">
-                    <span className="font-semibold text-sm">{rev.clientName}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {rev.rep} • {rev.category}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-medium text-sm">{formatCurrency(rev.value)}</span>
-                    <Badge
-                      variant={rev.status === 'Concluído' ? 'default' : 'secondary'}
-                      className={
-                        rev.status === 'Concluído' ? 'bg-secondary hover:bg-secondary' : ''
-                      }
+            <div className="h-[250px] w-full">
+              <ChartContainer config={chartConfig} className="h-full w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={2}
+                      dataKey="value"
                     >
-                      {rev.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             </div>
-            <Button variant="link" asChild className="mt-4 px-0">
-              <Link to="/historico">
-                Ver todo o histórico <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2 shadow-sm">
+        <Card className="shadow-sm lg:col-span-1">
           <CardHeader>
-            <CardTitle>Status da Automação</CardTitle>
-            <CardDescription>Sistemas integrados</CardDescription>
+            <CardTitle>Motivos de Reprovação</CardTitle>
+            <CardDescription>Principais causas de recusa</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-secondary animate-pulse" />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium leading-none">Planilha Financeira</p>
-                <p className="text-xs text-muted-foreground">Online e Sincronizando</p>
+          <CardContent>
+            {barData.length > 0 ? (
+              <div className="h-[250px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={barData}
+                    layout="vertical"
+                    margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
+                  >
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} />
+                    <Tooltip cursor={{ fill: 'transparent' }} />
+                    <Bar
+                      dataKey="value"
+                      fill="hsl(var(--destructive))"
+                      radius={[0, 4, 4, 0]}
+                      barSize={20}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-secondary animate-pulse" />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium leading-none">Notificações Slack/Email</p>
-                <p className="text-xs text-muted-foreground">Operacional</p>
+            ) : (
+              <div className="flex h-[250px] items-center justify-center text-muted-foreground text-sm">
+                Nenhum dado de reprovação.
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-accent" />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium leading-none">Sistema ERP ERP-John</p>
-                <p className="text-xs text-muted-foreground">Manutenção Programada</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm lg:col-span-1">
+          <CardHeader>
+            <CardTitle>Fila de Acompanhamento</CardTitle>
+            <CardDescription>Clientes marcados para monitoramento</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {followUpQueue.length > 0 ? (
+              <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
+                {followUpQueue.map((c) => (
+                  <div key={c.id} className="flex flex-col gap-1 p-3 rounded-lg bg-muted/30 border">
+                    <div className="flex justify-between items-start">
+                      <span className="font-semibold text-sm">{c.clientName}</span>
+                      <Badge variant="outline" className="text-[10px]">
+                        {c.followUpPeriod}
+                      </Badge>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatCurrency(c.value)} • {c.rep}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <AlertCircle className="h-4 w-4 text-accent" />
-            </div>
+            ) : (
+              <div className="flex h-[250px] items-center justify-center text-muted-foreground text-sm">
+                Nenhum cliente em acompanhamento.
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

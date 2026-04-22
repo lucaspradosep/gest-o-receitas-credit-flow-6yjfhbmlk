@@ -1,23 +1,24 @@
 import { Outlet } from 'react-router-dom'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from './app-sidebar'
 import { AppHeader } from './app-header'
-import { RevenueProvider } from '@/context/revenue-context'
+import { SidebarProvider } from '@/components/ui/sidebar'
+import { CreditProvider } from '@/context/credit-context'
+import { RoleProvider } from '@/context/role-context'
 
 export default function Layout() {
   return (
-    <RevenueProvider>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset className="bg-background">
-          <AppHeader />
-          <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto animate-fade-in">
-            <div className="mx-auto max-w-6xl">
+    <RoleProvider>
+      <CreditProvider>
+        <SidebarProvider>
+          <AppSidebar />
+          <div className="flex min-h-screen flex-col w-full">
+            <AppHeader />
+            <main className="flex-1 p-6 overflow-y-auto bg-muted/10">
               <Outlet />
-            </div>
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
-    </RevenueProvider>
+            </main>
+          </div>
+        </SidebarProvider>
+      </CreditProvider>
+    </RoleProvider>
   )
 }

@@ -58,12 +58,12 @@ export function SubmissionModal({ isOpen, onSuccessComplete }: SubmissionModalPr
                   done={step >= 1}
                 />
                 <StepItem
-                  label="Enviando para Planilha de Gestão..."
+                  label="Registrando solicitação de crédito..."
                   active={step >= 1}
                   done={step >= 2}
                 />
                 <StepItem
-                  label="Notificando Time de Gestão..."
+                  label="Enviando e-mail para faturamento@johnrichard.com.br..."
                   active={step >= 2}
                   done={step >= 3}
                 />
@@ -77,7 +77,7 @@ export function SubmissionModal({ isOpen, onSuccessComplete }: SubmissionModalPr
             </div>
             <DialogTitle className="text-2xl">Sucesso!</DialogTitle>
             <DialogDescription className="text-base">
-              Dados enviados com sucesso e o time de gestão já foi notificado.
+              Análise solicitada com sucesso. O time de faturamento foi notificado.
             </DialogDescription>
             <div className="pt-4 flex gap-3 w-full">
               <Button variant="outline" className="flex-1" onClick={onSuccessComplete}>

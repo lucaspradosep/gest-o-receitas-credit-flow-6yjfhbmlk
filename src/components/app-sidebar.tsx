@@ -1,4 +1,4 @@
-import { LayoutDashboard, PlusCircle, History, Building2 } from 'lucide-react'
+import { LayoutDashboard, FileText, History, ShieldCheck } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Sidebar,
@@ -14,7 +14,7 @@ import {
 
 const navItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Nova Receita', url: '/nova-receita', icon: PlusCircle },
+  { title: 'Nova Análise', url: '/nova-analise', icon: FileText },
   { title: 'Histórico', url: '/historico', icon: History },
 ]
 
@@ -25,9 +25,9 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4 flex flex-row items-center gap-3 border-b">
         <div className="bg-primary text-primary-foreground p-2 rounded-md">
-          <Building2 size={24} />
+          <ShieldCheck size={24} />
         </div>
-        <div className="font-bold text-lg text-primary tracking-tight">Grupo John</div>
+        <div className="font-bold text-lg text-primary tracking-tight">CreditFlow</div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

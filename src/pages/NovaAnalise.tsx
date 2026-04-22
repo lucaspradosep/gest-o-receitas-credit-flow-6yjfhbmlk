@@ -13,32 +13,24 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { useRevenue } from '@/context/revenue-context'
+import { useCredit } from '@/context/credit-context'
 import { SubmissionModal } from '@/components/form/submission-modal'
 
 const formSchema = z.object({
   clientName: z.string().min(3, 'Nome do cliente é obrigatório'),
-  document: z.string().min(11, 'Documento inválido'),
-  segment: z.string().min(2, 'Segmento é obrigatório'),
+  document: z.string().min(14, 'CNPJ inválido (mín. 14 caracteres)'),
   value: z.coerce.number().min(1, 'Valor deve ser maior que 0'),
-  date: z.string().min(1, 'Data é obrigatória'),
-  category: z.string().min(1, 'Categoria é obrigatória'),
+  quantity: z.coerce.number().min(1, 'Quantidade deve ser maior que 0'),
+  deliveryAddress: z.string().min(5, 'Endereço é obrigatório'),
   rep: z.string().min(1, 'Vendedor é obrigatório'),
   notes: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
-export default function NovaReceita() {
-  const { addRevenue } = useRevenue()
+export default function NovaAnalise() {
+  const { addCredit } = useCredit()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<FormValues>({
@@ -46,10 +38,9 @@ export default function NovaReceita() {
     defaultValues: {
       clientName: '',
       document: '',
-      segment: '',
       value: 0,
-      date: new Date().toISOString().split('T')[0],
-      category: '',
+      quantity: 1,
+      deliveryAddress: '',
       rep: 'Carlos Silva',
       notes: '',
     },
@@ -57,12 +48,9 @@ export default function NovaReceita() {
 
   const onSubmit = (data: FormValues) => {
     setIsSubmitting(true)
-    // Data is saved to context after the success animation in the modal completes,
-    // but to prevent losing context, we save it immediately or pass it.
-    // Actually, passing it to addRevenue immediately is fine, the modal just blocks UI.
     setTimeout(() => {
-      addRevenue(data)
-    }, 4000) // Simulate API call ending right before success step
+      addCredit({ ...data, requiresFollowUp: false })
+    }, 4000)
   }
 
   const handleSuccessClose = () => {
@@ -73,17 +61,17 @@ export default function NovaReceita() {
   return (
     <div className="space-y-6 animate-slide-up max-w-4xl mx-auto">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Nova Receita</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Nova Análise de Crédito</h2>
         <p className="text-muted-foreground">
-          Preencha os dados abaixo para registrar uma nova venda.
+          Preencha os dados do cliente para submeter ao Revenue Management.
         </p>
       </div>
 
       <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle>Formulário de Lançamento</CardTitle>
+          <CardTitle>Formulário de Solicitação</CardTitle>
           <CardDescription>
-            Os dados serão enviados automaticamente para a planilha financeira.
+            A equipe de faturamento será notificada automaticamente.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -97,7 +85,7 @@ export default function NovaReceita() {
                     name="clientName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nome do Cliente / Razão Social</FormLabel>
+                        <FormLabel>Nome do Cliente / Razão Social *</FormLabel>
                         <FormControl>
                           <Input placeholder="Ex: Acme Corp" {...field} />
                         </FormControl>
@@ -110,22 +98,9 @@ export default function NovaReceita() {
                     name="document"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>CNPJ / CPF</FormLabel>
+                        <FormLabel>CNPJ *</FormLabel>
                         <FormControl>
                           <Input placeholder="00.000.000/0001-00" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="segment"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Segmento de Atuação</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: Tecnologia, Varejo, Indústria" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -135,14 +110,14 @@ export default function NovaReceita() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-medium border-b pb-2">Detalhes da Negociação</h3>
+                <h3 className="text-lg font-medium border-b pb-2">Detalhes do Pedido</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="value"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Valor (R$)</FormLabel>
+                        <FormLabel>Valor Total (R$) *</FormLabel>
                         <FormControl>
                           <Input type="number" step="0.01" placeholder="0.00" {...field} />
                         </FormControl>
@@ -152,12 +127,12 @@ export default function NovaReceita() {
                   />
                   <FormField
                     control={form.control}
-                    name="date"
+                    name="quantity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Data da Venda</FormLabel>
+                        <FormLabel>Quantidade de Itens *</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <Input type="number" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -165,45 +140,13 @@ export default function NovaReceita() {
                   />
                   <FormField
                     control={form.control}
-                    name="category"
+                    name="deliveryAddress"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Categoria / Produto</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione um produto" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Software">Software ERP</SelectItem>
-                            <SelectItem value="Consultoria">Consultoria Estratégica</SelectItem>
-                            <SelectItem value="Equipamentos">Equipamentos Industriais</SelectItem>
-                            <SelectItem value="Servicos">Serviços Continuados</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="rep"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Vendedor Responsável</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione o vendedor" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Carlos Silva">Carlos Silva</SelectItem>
-                            <SelectItem value="Ana Paula">Ana Paula</SelectItem>
-                            <SelectItem value="Marcos Santos">Marcos Santos</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Endereço de Entrega *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Rua, Número, Bairro, Cidade - UF" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -213,11 +156,11 @@ export default function NovaReceita() {
                     name="notes"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel>Observações Adicionais</FormLabel>
+                        <FormLabel>Documentação e Observações</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Detalhes importantes para o time financeiro..."
-                            className="resize-none"
+                            placeholder="Links para orçamento, docs complementares, ou observações..."
+                            className="resize-none h-24"
                             {...field}
                           />
                         </FormControl>
@@ -237,7 +180,7 @@ export default function NovaReceita() {
                   size="lg"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8"
                 >
-                  Enviar Dados
+                  Enviar Solicitação
                 </Button>
               </div>
             </form>
