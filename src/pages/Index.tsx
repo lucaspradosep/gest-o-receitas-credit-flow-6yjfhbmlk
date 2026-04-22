@@ -17,9 +17,16 @@ import {
   Tooltip,
 } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import { Navigate } from 'react-router-dom'
+import { useRole } from '@/context/role-context'
 
 export default function Index() {
   const { credits } = useCredit()
+  const { role } = useRole()
+
+  if (role === 'Comercial') {
+    return <Navigate to="/nova-analise" replace />
+  }
 
   const totalAnalyses = credits.length
   const approved = credits.filter((c) => c.status === 'Aprovado').length
@@ -197,7 +204,7 @@ export default function Index() {
                       </Badge>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {formatCurrency(c.value)} • {c.rep}
+                      {formatCurrency(c.value)} • {c.requesterName}
                     </span>
                   </div>
                 ))}

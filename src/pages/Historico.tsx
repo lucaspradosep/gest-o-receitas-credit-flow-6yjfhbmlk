@@ -16,9 +16,16 @@ import { useCredit } from '@/context/credit-context'
 import { CreditRequest } from '@/types/credit'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { DetailsSheet } from '@/components/history/details-sheet'
+import { Navigate } from 'react-router-dom'
+import { useRole } from '@/context/role-context'
 
 export default function Historico() {
   const { credits } = useCredit()
+  const { role } = useRole()
+
+  if (role === 'Comercial') {
+    return <Navigate to="/nova-analise" replace />
+  }
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCredit, setSelectedCredit] = useState<CreditRequest | null>(null)
 
@@ -95,7 +102,7 @@ export default function Historico() {
                     </TableCell>
                     <TableCell>
                       <div className="font-semibold">{credit.clientName}</div>
-                      <div className="text-xs text-muted-foreground">{credit.rep}</div>
+                      <div className="text-xs text-muted-foreground">{credit.requesterName}</div>
                     </TableCell>
                     <TableCell>{credit.document}</TableCell>
                     <TableCell>

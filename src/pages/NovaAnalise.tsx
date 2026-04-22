@@ -18,12 +18,13 @@ import { useCredit } from '@/context/credit-context'
 import { SubmissionModal } from '@/components/form/submission-modal'
 
 const formSchema = z.object({
+  requesterName: z.string().min(3, 'Nome do solicitante é obrigatório'),
   clientName: z.string().min(3, 'Nome do cliente é obrigatório'),
   document: z.string().min(14, 'CNPJ inválido (mín. 14 caracteres)'),
   value: z.coerce.number().min(1, 'Valor deve ser maior que 0'),
   quantity: z.coerce.number().min(1, 'Quantidade deve ser maior que 0'),
   deliveryAddress: z.string().min(5, 'Endereço é obrigatório'),
-  rep: z.string().min(1, 'Vendedor é obrigatório'),
+  documentation: z.any().optional(),
   notes: z.string().optional(),
 })
 
@@ -36,12 +37,13 @@ export default function NovaAnalise() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      requesterName: '',
       clientName: '',
       document: '',
-      value: 0,
+      value: undefined,
       quantity: 1,
       deliveryAddress: '',
-      rep: 'Carlos Silva',
+      documentation: undefined,
       notes: '',
     },
   })
@@ -63,7 +65,7 @@ export default function NovaAnalise() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Nova Análise de Crédito</h2>
         <p className="text-muted-foreground">
-          Preencha os dados do cliente para submeter ao Revenue Management.
+          Preencha os dados da solicitação para submeter ao Revenue Management.
         </p>
       </div>
 
@@ -71,15 +73,28 @@ export default function NovaAnalise() {
         <CardHeader>
           <CardTitle>Formulário de Solicitação</CardTitle>
           <CardDescription>
-            A equipe de faturamento será notificada automaticamente.
+            A equipe de faturamento será notificada automaticamente ao enviar.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-lg font-medium border-b pb-2">Informações do Cliente</h3>
+                <h3 className="text-lg font-medium border-b pb-2">Identificação</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="requesterName"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Nome do Solicitante *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Seu nome completo" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="clientName"
@@ -119,7 +134,13 @@ export default function NovaAnalise() {
                       <FormItem>
                         <FormLabel>Valor Total (R$) *</FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            {...field}
+                            value={field.value || ''}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -153,13 +174,31 @@ export default function NovaAnalise() {
                   />
                   <FormField
                     control={form.control}
+                    name="documentation"
+                    render={({ field: { value, onChange, ...field } }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Documentação Complementar</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.png,.jpg"
+                            onChange={(e) => onChange(e.target.value)}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="notes"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel>Documentação e Observações</FormLabel>
+                        <FormLabel>Observações Adicionais</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Links para orçamento, docs complementares, ou observações..."
+                            placeholder="Links para orçamento ou informações adicionais..."
                             className="resize-none h-24"
                             {...field}
                           />

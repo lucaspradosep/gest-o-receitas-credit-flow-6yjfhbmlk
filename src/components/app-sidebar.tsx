@@ -1,5 +1,6 @@
 import { LayoutDashboard, FileText, History, ShieldCheck } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { useRole } from '@/context/role-context'
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +21,14 @@ const navItems = [
 
 export function AppSidebar() {
   const location = useLocation()
+  const { role } = useRole()
+
+  const filteredNavItems = navItems.filter((item) => {
+    if (role === 'Comercial') {
+      return item.url === '/nova-analise'
+    }
+    return true
+  })
 
   return (
     <Sidebar>
@@ -34,7 +43,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Comercial & Gestão</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {filteredNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

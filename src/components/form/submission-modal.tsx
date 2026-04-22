@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress'
 import { CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
+import { useRole } from '@/context/role-context'
 
 interface SubmissionModalProps {
   isOpen: boolean
@@ -19,6 +20,7 @@ interface SubmissionModalProps {
 export function SubmissionModal({ isOpen, onSuccessComplete }: SubmissionModalProps) {
   const [step, setStep] = useState(0)
   const navigate = useNavigate()
+  const { role } = useRole()
 
   useEffect(() => {
     if (!isOpen) {
@@ -83,15 +85,17 @@ export function SubmissionModal({ isOpen, onSuccessComplete }: SubmissionModalPr
               <Button variant="outline" className="flex-1" onClick={onSuccessComplete}>
                 Novo Cadastro
               </Button>
-              <Button
-                className="flex-1 bg-secondary hover:bg-secondary/90"
-                onClick={() => {
-                  onSuccessComplete()
-                  navigate('/historico')
-                }}
-              >
-                Ver Histórico
-              </Button>
+              {role === 'Revenue Management' && (
+                <Button
+                  className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                  onClick={() => {
+                    onSuccessComplete()
+                    navigate('/historico')
+                  }}
+                >
+                  Ver Histórico
+                </Button>
+              )}
             </div>
           </div>
         )}

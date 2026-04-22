@@ -115,13 +115,28 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
               <DetailItem label="CNPJ" value={credit.document} />
             </div>
             <DetailItem label="Endereço de Entrega" value={credit.deliveryAddress} />
-            <DetailItem label="Vendedor" value={credit.rep} />
+            <DetailItem label="Solicitante" value={credit.requesterName} />
           </div>
 
-          {credit.notes && (
-            <div className="space-y-2">
-              <Label className="text-muted-foreground">Observações</Label>
-              <p className="text-sm bg-muted/50 p-3 rounded-md border">{credit.notes}</p>
+          {(credit.notes || credit.documentation) && (
+            <div className="space-y-4">
+              {credit.documentation && (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Documentação Complementar</Label>
+                  <div className="text-sm p-3 rounded-md border bg-muted/50 flex items-center gap-2">
+                    <span className="truncate">
+                      {credit.documentation.split('\\').pop()?.split('/').pop() ||
+                        'Documento anexado'}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {credit.notes && (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Observações</Label>
+                  <p className="text-sm bg-muted/50 p-3 rounded-md border">{credit.notes}</p>
+                </div>
+              )}
             </div>
           )}
 

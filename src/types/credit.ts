@@ -7,7 +7,8 @@ export interface CreditRequest {
   value: number
   quantity: number
   deliveryAddress: string
-  rep: string
+  requesterName: string
+  documentation?: string
   notes?: string
   status: CreditStatus
   paymentCondition?: string

@@ -57,12 +57,20 @@ export function AppHeader() {
         </Button>
         <div className="flex items-center gap-3 border-l pl-4">
           <div className="hidden text-right text-sm md:block">
-            <p className="font-medium leading-none">Carlos Silva</p>
+            <p className="font-medium leading-none">
+              {role === 'Comercial' ? 'Usuário Público' : 'Administrador'}
+            </p>
             <p className="text-xs text-muted-foreground">{role}</p>
           </div>
           <Avatar>
-            <AvatarImage src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=12" />
-            <AvatarFallback>CS</AvatarFallback>
+            <AvatarImage
+              src={
+                role === 'Comercial'
+                  ? 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2'
+                  : 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=12'
+              }
+            />
+            <AvatarFallback>{role === 'Comercial' ? 'UP' : 'AD'}</AvatarFallback>
           </Avatar>
         </div>
       </div>
