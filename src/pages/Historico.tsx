@@ -109,7 +109,7 @@ export default function Historico() {
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead className="pl-6">Data {isComercial ? '' : 'e Hora'}</TableHead>
+                <TableHead className="pl-6">Data e Hora</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>CNPJ</TableHead>
                 <TableHead>Valor</TableHead>
@@ -131,9 +131,7 @@ export default function Historico() {
                     onClick={() => setSelectedCredit(credit)}
                   >
                     <TableCell className="pl-6 font-medium whitespace-nowrap">
-                      {isComercial
-                        ? formatDate(credit.createdAt)
-                        : formatDateTime(credit.createdAt)}
+                      {formatDateTime(credit.createdAt)}
                     </TableCell>
                     <TableCell>
                       <div className="font-semibold">{credit.clientName}</div>

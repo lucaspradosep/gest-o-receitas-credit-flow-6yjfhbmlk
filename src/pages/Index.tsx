@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCredit } from '@/context/credit-context'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDateTime } from '@/lib/utils'
 import {
   Pie,
   PieChart,
@@ -20,9 +20,19 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  LabelList,
 } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { useRole } from '@/context/role-context'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -275,7 +285,14 @@ export default function Index() {
                       fill="hsl(var(--destructive))"
                       radius={[0, 4, 4, 0]}
                       barSize={20}
-                    />
+                    >
+                      <LabelList
+                        dataKey="value"
+                        position="right"
+                        fontSize={12}
+                        fill="currentColor"
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -315,6 +332,57 @@ export default function Index() {
           </CardContent>
         </Card>
       </div>
+
+      {(statusFilter === 'Aprovados' || statusFilter === 'Reprovados') && (
+        <Card className="shadow-sm animate-fade-in-up">
+          <CardHeader>
+            <CardTitle>Detalhamento: {statusFilter}</CardTitle>
+            <CardDescription>
+              Lista de solicitações com status {statusFilter.toLowerCase()} no período
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data e Hora</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>CNPJ</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCredits.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground h-24">
+                        Nenhum registro encontrado.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCredits.map((credit) => (
+                      <TableRow key={credit.id}>
+                        <TableCell className="whitespace-nowrap">
+                          {formatDateTime(credit.createdAt)}
+                        </TableCell>
+                        <TableCell className="font-medium">{credit.clientName}</TableCell>
+                        <TableCell>{credit.document}</TableCell>
+                        <TableCell>{formatCurrency(credit.value)}</TableCell>
+                        <TableCell>
+                          <Badge variant={credit.status === 'Aprovado' ? 'default' : 'destructive'}>
+                            {credit.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

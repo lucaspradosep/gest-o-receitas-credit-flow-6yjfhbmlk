@@ -40,7 +40,7 @@ const mockData: CreditRequest[] = [
     uf: 'RJ',
     unidadeNegocio: 'Varejo',
     status: 'Reprovado',
-    denialReasons: ['Score Negativo', 'Endereço'],
+    denialReasons: ['Score Baixo', 'Inadimplência na Praça'],
     requiresFollowUp: false,
     createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     analysisDate: new Date().toISOString(),

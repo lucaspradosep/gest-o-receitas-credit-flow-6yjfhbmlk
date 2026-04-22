@@ -231,7 +231,15 @@ export default function Feedback() {
                         Motivos da Reprovação (Uso Interno) *
                       </Label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                        {['Score Negativo', 'Endereço', 'Fraude', 'Outros'].map((reason) => (
+                        {[
+                          'Score Baixo',
+                          'Score Negativo',
+                          'Endereço',
+                          'Inadimplência na Praça',
+                          'Possível Fraude',
+                          'Documentação Incompleta',
+                          'Outros',
+                        ].map((reason) => (
                           <div className="flex items-center space-x-2" key={reason}>
                             <Checkbox
                               id={`reason-${reason}`}
