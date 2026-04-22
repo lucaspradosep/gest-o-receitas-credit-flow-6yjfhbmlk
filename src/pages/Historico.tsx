@@ -37,7 +37,7 @@ export default function Historico() {
 
   const getStatusBadgeVariant = (status: string) => {
     if (status === 'Aprovado') return 'default'
-    if (status === 'Reprovado') return 'destructive'
+    if (status === 'Negado') return 'destructive'
     return 'secondary'
   }
 
@@ -102,7 +102,7 @@ export default function Historico() {
                     </TableCell>
                     <TableCell>
                       <div className="font-semibold">{credit.clientName}</div>
-                      <div className="text-xs text-muted-foreground">{credit.requesterName}</div>
+                      <div className="text-xs text-muted-foreground">{credit.requesterEmail}</div>
                     </TableCell>
                     <TableCell>{credit.document}</TableCell>
                     <TableCell>

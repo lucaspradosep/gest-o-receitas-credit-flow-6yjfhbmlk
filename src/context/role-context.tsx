@@ -4,14 +4,22 @@ type Role = 'Comercial' | 'Revenue Management'
 
 interface RoleContextType {
   role: Role
+  isAuthenticated: boolean
   setRole: (role: Role) => void
+  setIsAuthenticated: (auth: boolean) => void
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined)
 
 export function RoleProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<Role>('Comercial')
-  return <RoleContext.Provider value={{ role, setRole }}>{children}</RoleContext.Provider>
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  return (
+    <RoleContext.Provider value={{ role, setRole, isAuthenticated, setIsAuthenticated }}>
+      {children}
+    </RoleContext.Provider>
+  )
 }
 
 export function useRole() {

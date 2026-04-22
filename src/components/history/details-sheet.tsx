@@ -53,15 +53,15 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
   if (!credit) return null
 
   const handleSave = () => {
-    if (status === 'Reprovado' && !denialReason) {
-      toast.error('Informe o motivo da reprovação.')
+    if (status === 'Negado' && !denialReason) {
+      toast.error('Informe o motivo da negação.')
       return
     }
 
     updateCreditStatus(credit.id, {
       status,
       paymentCondition: status === 'Aprovado' ? paymentCondition : undefined,
-      denialReason: status === 'Reprovado' ? denialReason : undefined,
+      denialReason: status === 'Negado' ? denialReason : undefined,
       requiresFollowUp: status === 'Aprovado' ? requiresFollowUp : false,
       followUpPeriod: status === 'Aprovado' && requiresFollowUp ? followUpPeriod : undefined,
     })
@@ -74,7 +74,7 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
 
   const getStatusBadgeVariant = (s: string) => {
     if (s === 'Aprovado') return 'default'
-    if (s === 'Reprovado') return 'destructive'
+    if (s === 'Negado') return 'destructive'
     return 'secondary'
   }
 
@@ -115,7 +115,7 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
               <DetailItem label="CNPJ" value={credit.document} />
             </div>
             <DetailItem label="Endereço de Entrega" value={credit.deliveryAddress} />
-            <DetailItem label="Solicitante" value={credit.requesterName} />
+            <DetailItem label="Email Solicitante" value={credit.requesterEmail} />
           </div>
 
           {(credit.notes || credit.documentation) && (
@@ -155,7 +155,7 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
                   <SelectContent>
                     <SelectItem value="Pendente">Pendente</SelectItem>
                     <SelectItem value="Aprovado">Aprovado</SelectItem>
-                    <SelectItem value="Reprovado">Reprovado</SelectItem>
+                    <SelectItem value="Negado">Negado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -193,19 +193,21 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
                 </>
               )}
 
-              {status === 'Reprovado' && (
+              {status === 'Negado' && (
                 <div className="space-y-2 animate-fade-in-up">
-                  <Label className="text-destructive">Motivo da Reprovação *</Label>
+                  <Label className="text-destructive">Motivo da Negação *</Label>
                   <Select value={denialReason} onValueChange={setDenialReason}>
                     <SelectTrigger className="border-destructive/50 focus:ring-destructive">
                       <SelectValue placeholder="Selecione o motivo" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Score Baixo">Score Baixo</SelectItem>
-                      <SelectItem value="Suspeita de Fraude">Suspeita de Fraude</SelectItem>
-                      <SelectItem value="Endereço Inconsistente">Endereço Inconsistente</SelectItem>
-                      <SelectItem value="Restrição Financeira">Restrição Financeira</SelectItem>
-                      <SelectItem value="Outro">Outro</SelectItem>
+                      <SelectItem value="Possível Fraude">Possível Fraude</SelectItem>
+                      <SelectItem value="Inadimplência na Praça">Inadimplência na Praça</SelectItem>
+                      <SelectItem value="Documentação Incompleta">
+                        Documentação Incompleta
+                      </SelectItem>
+                      <SelectItem value="Divergência Cadastral">Divergência Cadastral</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -229,9 +231,9 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
                   )}
                 </div>
               )}
-              {credit.status === 'Reprovado' && (
+              {credit.status === 'Negado' && (
                 <div className="bg-destructive/5 p-4 rounded-lg border border-destructive/20 space-y-3">
-                  <h4 className="font-medium text-destructive">Detalhes da Reprovação</h4>
+                  <h4 className="font-medium text-destructive">Detalhes da Negação</h4>
                   <DetailItem label="Motivo" value={credit.denialReason || 'Não informado'} />
                 </div>
               )}

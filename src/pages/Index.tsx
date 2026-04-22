@@ -19,34 +19,48 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { Navigate } from 'react-router-dom'
 import { useRole } from '@/context/role-context'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useState } from 'react'
 
 export default function Index() {
   const { credits } = useCredit()
   const { role } = useRole()
+  const [selectedMonth, setSelectedMonth] = useState('all')
 
   if (role === 'Comercial') {
     return <Navigate to="/nova-analise" replace />
   }
 
-  const totalAnalyses = credits.length
-  const approved = credits.filter((c) => c.status === 'Aprovado').length
-  const denied = credits.filter((c) => c.status === 'Reprovado').length
-  const pending = credits.filter((c) => c.status === 'Pendente').length
+  const filteredCredits =
+    selectedMonth === 'all'
+      ? credits
+      : credits.filter((c) => new Date(c.createdAt).getMonth() === parseInt(selectedMonth))
+
+  const totalAnalyses = filteredCredits.length
+  const approved = filteredCredits.filter((c) => c.status === 'Aprovado').length
+  const denied = filteredCredits.filter((c) => c.status === 'Negado').length
+  const pending = filteredCredits.filter((c) => c.status === 'Pendente').length
 
   const pieData = [
     { name: 'Aprovado', value: approved, fill: 'hsl(var(--primary))' },
-    { name: 'Reprovado', value: denied, fill: 'hsl(var(--destructive))' },
+    { name: 'Negado', value: denied, fill: 'hsl(var(--destructive))' },
     { name: 'Pendente', value: pending, fill: 'hsl(var(--muted-foreground))' },
   ]
 
   const chartConfig = {
     Aprovado: { label: 'Aprovado', color: 'hsl(var(--primary))' },
-    Reprovado: { label: 'Reprovado', color: 'hsl(var(--destructive))' },
+    Negado: { label: 'Negado', color: 'hsl(var(--destructive))' },
     Pendente: { label: 'Pendente', color: 'hsl(var(--muted-foreground))' },
   }
 
-  const denialReasons = credits
-    .filter((c) => c.status === 'Reprovado' && c.denialReason)
+  const denialReasons = filteredCredits
+    .filter((c) => c.status === 'Negado' && c.denialReason)
     .reduce(
       (acc, curr) => {
         acc[curr.denialReason!] = (acc[curr.denialReason!] || 0) + 1
@@ -56,7 +70,7 @@ export default function Index() {
     )
 
   const barData = Object.entries(denialReasons).map(([name, value]) => ({ name, value }))
-  const followUpQueue = credits.filter((c) => c.requiresFollowUp)
+  const followUpQueue = filteredCredits.filter((c) => c.requiresFollowUp)
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -65,19 +79,37 @@ export default function Index() {
           <h2 className="text-3xl font-bold tracking-tight">Dashboard Executivo</h2>
           <p className="text-muted-foreground">Métricas de aprovação e monitoramento de crédito.</p>
         </div>
-        <Button
-          asChild
-          size="lg"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground w-full md:w-auto"
-        >
-          <Link to="/nova-analise">Nova Análise de Crédito</Link>
-        </Button>
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="Mês" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Meses</SelectItem>
+              <SelectItem value="0">Janeiro</SelectItem>
+              <SelectItem value="1">Fevereiro</SelectItem>
+              <SelectItem value="2">Março</SelectItem>
+              <SelectItem value="3">Abril</SelectItem>
+              <SelectItem value="4">Maio</SelectItem>
+              <SelectItem value="5">Junho</SelectItem>
+              <SelectItem value="6">Julho</SelectItem>
+              <SelectItem value="7">Agosto</SelectItem>
+              <SelectItem value="8">Setembro</SelectItem>
+              <SelectItem value="9">Outubro</SelectItem>
+              <SelectItem value="10">Novembro</SelectItem>
+              <SelectItem value="11">Dezembro</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Link to="/nova-analise">Nova Análise</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="border-l-4 border-l-blue-500 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total de Análises (Mês)</CardTitle>
+            <CardTitle className="text-sm font-medium">Total de Análises</CardTitle>
             <TrendingUp className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -99,7 +131,7 @@ export default function Index() {
         </Card>
         <Card className="border-l-4 border-l-destructive shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Reprovados</CardTitle>
+            <CardTitle className="text-sm font-medium">Negados</CardTitle>
             <ShieldAlert className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
@@ -124,7 +156,7 @@ export default function Index() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="shadow-sm lg:col-span-1">
           <CardHeader>
-            <CardTitle>Aprovações vs Reprovações</CardTitle>
+            <CardTitle>Aprovações vs Negados</CardTitle>
             <CardDescription>Distribuição de status</CardDescription>
           </CardHeader>
           <CardContent>
@@ -155,7 +187,7 @@ export default function Index() {
 
         <Card className="shadow-sm lg:col-span-1">
           <CardHeader>
-            <CardTitle>Motivos de Reprovação</CardTitle>
+            <CardTitle>Motivos de Negação</CardTitle>
             <CardDescription>Principais causas de recusa</CardDescription>
           </CardHeader>
           <CardContent>
@@ -181,7 +213,7 @@ export default function Index() {
               </div>
             ) : (
               <div className="flex h-[250px] items-center justify-center text-muted-foreground text-sm">
-                Nenhum dado de reprovação.
+                Nenhum dado de negação.
               </div>
             )}
           </CardContent>
@@ -204,7 +236,7 @@ export default function Index() {
                       </Badge>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {formatCurrency(c.value)} • {c.requesterName}
+                      {formatCurrency(c.value)} • {c.requesterEmail}
                     </span>
                   </div>
                 ))}

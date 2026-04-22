@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, History, ShieldCheck } from 'lucide-react'
+import { LayoutDashboard, FileText, History, ShieldCheck, MailCheck } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useRole } from '@/context/role-context'
 import {
@@ -16,6 +16,7 @@ import {
 const navItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Nova Análise', url: '/nova-analise', icon: FileText },
+  { title: 'Devolutivas', url: '/feedback', icon: MailCheck },
   { title: 'Histórico', url: '/historico', icon: History },
 ]
 

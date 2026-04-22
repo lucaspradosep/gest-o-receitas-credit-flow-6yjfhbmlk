@@ -79,11 +79,11 @@ export function SubmissionModal({ isOpen, onSuccessComplete }: SubmissionModalPr
             </div>
             <DialogTitle className="text-2xl">Sucesso!</DialogTitle>
             <DialogDescription className="text-base">
-              Análise solicitada com sucesso. O time de faturamento foi notificado.
+              Solicitação enviada com sucesso!
             </DialogDescription>
             <div className="pt-4 flex gap-3 w-full">
               <Button variant="outline" className="flex-1" onClick={onSuccessComplete}>
-                Novo Cadastro
+                Enviar outra solicitação
               </Button>
               {role === 'Revenue Management' && (
                 <Button

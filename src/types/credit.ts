@@ -1,4 +1,4 @@
-export type CreditStatus = 'Pendente' | 'Aprovado' | 'Reprovado'
+export type CreditStatus = 'Pendente' | 'Aprovado' | 'Negado'
 
 export interface CreditRequest {
   id: string
@@ -7,7 +7,7 @@ export interface CreditRequest {
   value: number
   quantity: number
   deliveryAddress: string
-  requesterName: string
+  requesterEmail: string
   documentation?: string
   notes?: string
   status: CreditStatus

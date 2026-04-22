@@ -3,7 +3,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useRole } from '@/context/role-context'
 import {
   Select,
@@ -12,17 +12,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useState } from 'react'
+import { LoginDialog } from './auth/login-dialog'
 
 const routeTitles: Record<string, string> = {
   '/': 'Dashboard Executivo',
   '/nova-analise': 'Nova Análise de Crédito',
   '/historico': 'Histórico de Solicitações',
+  '/feedback': 'Reenvio do Chamado',
 }
 
 export function AppHeader() {
   const location = useLocation()
   const title = routeTitles[location.pathname] || 'CreditFlow'
-  const { role, setRole } = useRole()
+  const { role, setRole, isAuthenticated, setIsAuthenticated } = useRole()
+  const [isLoginOpen, setIsLoginOpen] = useState(false)
+  const navigate = useNavigate()
+
+  const handleRoleChange = (newRole: any) => {
+    if (newRole === 'Revenue Management' && !isAuthenticated) {
+      setIsLoginOpen(true)
+    } else if (newRole === 'Comercial') {
+      setRole('Comercial')
+      setIsAuthenticated(false)
+      navigate('/nova-analise')
+    } else {
+      setRole(newRole)
+      navigate('/')
+    }
+  }
+
+  const handleLoginClose = () => {
+    setIsLoginOpen(false)
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -33,7 +55,7 @@ export function AppHeader() {
 
       <div className="flex items-center gap-4">
         <div className="w-48 hidden md:block">
-          <Select value={role} onValueChange={(v: any) => setRole(v)}>
+          <Select value={role} onValueChange={handleRoleChange}>
             <SelectTrigger className="h-9">
               <SelectValue placeholder="Perfil" />
             </SelectTrigger>
@@ -74,6 +96,7 @@ export function AppHeader() {
           </Avatar>
         </div>
       </div>
+      <LoginDialog isOpen={isLoginOpen} onClose={handleLoginClose} />
     </header>
   )
 }

@@ -18,7 +18,7 @@ import { useCredit } from '@/context/credit-context'
 import { SubmissionModal } from '@/components/form/submission-modal'
 
 const formSchema = z.object({
-  requesterName: z.string().min(3, 'Nome do solicitante é obrigatório'),
+  requesterEmail: z.string().email('Email inválido'),
   clientName: z.string().min(3, 'Nome do cliente é obrigatório'),
   document: z.string().min(14, 'CNPJ inválido (mín. 14 caracteres)'),
   value: z.coerce.number().min(1, 'Valor deve ser maior que 0'),
@@ -37,7 +37,7 @@ export default function NovaAnalise() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      requesterName: '',
+      requesterEmail: '',
       clientName: '',
       document: '',
       value: undefined,
@@ -84,12 +84,12 @@ export default function NovaAnalise() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="requesterName"
+                    name="requesterEmail"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel>Nome do Solicitante *</FormLabel>
+                        <FormLabel>Email do Solicitante *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Seu nome completo" {...field} />
+                          <Input type="email" placeholder="seuemail@exemplo.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
