@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Form,
@@ -23,6 +24,11 @@ import {
 } from '@/components/ui/select'
 import { useCredit } from '@/context/credit-context'
 import { SubmissionModal } from '@/components/form/submission-modal'
+
+const supabase = createClient(
+  'https://qyhujieslzbbfrvyrhtw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5aHVqaWVzbHpiYmZydnlyaHR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODc0MjQsImV4cCI6MjA5MjQ2MzQyNH0.6DnX2J6chSaU9SL3G7GNxxm2I5914agRnFiEmsPqvj8',
+)
 
 const UFS = [
   'AC',
@@ -91,8 +97,22 @@ export default function NovaAnalise() {
     },
   })
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
+    await supabase.from('solicitacoes_credito').insert([
+      {
+        requester_email: data.requesterEmail,
+        client_name: data.clientName,
+        document: data.document,
+        empresa: data.empresa,
+        uf: data.uf,
+        unidade_negocio: data.unidadeNegocio,
+        value: data.value,
+        quantity: data.quantity,
+        delivery_address: data.deliveryAddress,
+        notes: data.notes ?? null,
+      },
+    ])
     setTimeout(() => {
       addCredit(data)
     }, 4000)
