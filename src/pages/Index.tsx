@@ -82,6 +82,10 @@ export default function Index() {
     .filter((c) => c.status === 'Aprovado')
     .reduce((sum, c) => sum + c.value, 0)
 
+  const totalValueDenied = filteredCredits
+    .filter((c) => c.status === 'Reprovado')
+    .reduce((sum, c) => sum + c.value, 0)
+
   const pieData = [
     { name: 'Aprovados', value: totalApprovedOnly, fill: 'hsl(var(--primary))' },
     { name: 'Aprovados (Acomp.)', value: approvedFollowUp, fill: 'hsl(var(--chart-4))' },
@@ -159,7 +163,7 @@ export default function Index() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card className="border-l-4 border-l-blue-500 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Análises</CardTitle>
@@ -204,6 +208,18 @@ export default function Index() {
             <p className="text-xs text-muted-foreground mt-1">
               {totalAnalyses > 0 ? Math.round((denied / totalAnalyses) * 100) : 0}% do total
             </p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-destructive shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Valor Reprovado</CardTitle>
+            <DollarSign className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold truncate" title={formatCurrency(totalValueDenied)}>
+              {formatCurrency(totalValueDenied)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Crédito declinado</p>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-muted-foreground shadow-sm">

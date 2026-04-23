@@ -9,7 +9,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      solicitacoes_credito: {
+        Row: {
+          client_name: string | null
+          created_at: string | null
+          delivery_address: string | null
+          document: string | null
+          empresa: string | null
+          id: string
+          notes: string | null
+          quantity: number | null
+          requester_email: string | null
+          uf: string | null
+          unidade_negocio: string | null
+          value: number | null
+        }
+        Insert: {
+          client_name?: string | null
+          created_at?: string | null
+          delivery_address?: string | null
+          document?: string | null
+          empresa?: string | null
+          id?: string
+          notes?: string | null
+          quantity?: number | null
+          requester_email?: string | null
+          uf?: string | null
+          unidade_negocio?: string | null
+          value?: number | null
+        }
+        Update: {
+          client_name?: string | null
+          created_at?: string | null
+          delivery_address?: string | null
+          document?: string | null
+          empresa?: string | null
+          id?: string
+          notes?: string | null
+          quantity?: number | null
+          requester_email?: string | null
+          uf?: string | null
+          unidade_negocio?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -153,3 +197,29 @@ export const Constants = {
 // IMPORTANT: The TypeScript types above map UUID, TEXT, VARCHAR all to "string".
 // Use the COLUMN TYPES section below to know the real PostgreSQL type for each column.
 // Always use the correct PostgreSQL type when writing SQL migrations.
+
+// --- COLUMN TYPES (actual PostgreSQL types) ---
+// Use this to know the real database type when writing migrations.
+// "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: solicitacoes_credito
+//   id: uuid (not null, default: gen_random_uuid())
+//   created_at: timestamp with time zone (nullable, default: now())
+//   requester_email: text (nullable)
+//   client_name: text (nullable)
+//   document: text (nullable)
+//   empresa: text (nullable)
+//   uf: text (nullable)
+//   unidade_negocio: text (nullable)
+//   value: numeric (nullable)
+//   quantity: integer (nullable)
+//   delivery_address: text (nullable)
+//   notes: text (nullable)
+
+// --- CONSTRAINTS ---
+// Table: solicitacoes_credito
+//   PRIMARY KEY solicitacoes_credito_pkey: PRIMARY KEY (id)
+
+// --- ROW LEVEL SECURITY POLICIES ---
+// Table: solicitacoes_credito
+//   Policy "Allow insert for all" (INSERT, PERMISSIVE) roles={anon}
+//     WITH CHECK: true
