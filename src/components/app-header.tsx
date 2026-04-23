@@ -78,23 +78,22 @@ export function AppHeader() {
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent" />
         </Button>
         <div className="flex items-center gap-3 border-l pl-4">
-          <div className="hidden text-right text-sm md:block">
+          <div
+            className={
+              role === 'Comercial' ? 'text-right text-sm' : 'hidden text-right text-sm md:block'
+            }
+          >
             <p className="font-medium leading-none">
-              {role === 'Comercial' ? 'Usuário Público' : 'Administrador'}
+              {role === 'Comercial' ? 'Comercial' : 'Administrador'}
             </p>
-            <p className="text-xs text-muted-foreground">{role}</p>
+            {role !== 'Comercial' && <p className="text-xs text-muted-foreground">{role}</p>}
           </div>
-          <Avatar>
-            <AvatarImage
-              src={
-                role === 'Comercial'
-                  ? 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2'
-                  : '/grupo-john.png'
-              }
-              className="object-cover"
-            />
-            <AvatarFallback>{role === 'Comercial' ? 'UP' : 'GJ'}</AvatarFallback>
-          </Avatar>
+          {role !== 'Comercial' && (
+            <Avatar>
+              <AvatarImage src="/grupo-john.png" className="object-cover" />
+              <AvatarFallback>GJ</AvatarFallback>
+            </Avatar>
+          )}
         </div>
       </div>
       <LoginDialog isOpen={isLoginOpen} onClose={handleLoginClose} />

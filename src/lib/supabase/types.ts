@@ -9,6 +9,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      devolutivas: {
+        Row: {
+          additional_info: string | null
+          analysis_date: string | null
+          client_name: string | null
+          created_at: string | null
+          denial_reasons: string[] | null
+          id: string
+          info_request_date: string | null
+          requester_email: string | null
+          requires_follow_up: boolean | null
+          solicitacao_id: string | null
+          status: string | null
+          value: number | null
+        }
+        Insert: {
+          additional_info?: string | null
+          analysis_date?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          denial_reasons?: string[] | null
+          id?: string
+          info_request_date?: string | null
+          requester_email?: string | null
+          requires_follow_up?: boolean | null
+          solicitacao_id?: string | null
+          status?: string | null
+          value?: number | null
+        }
+        Update: {
+          additional_info?: string | null
+          analysis_date?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          denial_reasons?: string[] | null
+          id?: string
+          info_request_date?: string | null
+          requester_email?: string | null
+          requires_follow_up?: boolean | null
+          solicitacao_id?: string | null
+          status?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       solicitacoes_credito: {
         Row: {
           client_name: string | null
@@ -201,6 +246,19 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: devolutivas
+//   id: uuid (not null, default: gen_random_uuid())
+//   created_at: timestamp with time zone (nullable, default: now())
+//   solicitacao_id: uuid (nullable)
+//   client_name: text (nullable)
+//   requester_email: text (nullable)
+//   status: text (nullable)
+//   value: numeric (nullable)
+//   requires_follow_up: boolean (nullable, default: false)
+//   denial_reasons: _text (nullable)
+//   additional_info: text (nullable)
+//   info_request_date: text (nullable)
+//   analysis_date: text (nullable)
 // Table: solicitacoes_credito
 //   id: uuid (not null, default: gen_random_uuid())
 //   created_at: timestamp with time zone (nullable, default: now())
@@ -216,10 +274,15 @@ export const Constants = {
 //   notes: text (nullable)
 
 // --- CONSTRAINTS ---
+// Table: devolutivas
+//   PRIMARY KEY devolutivas_pkey: PRIMARY KEY (id)
 // Table: solicitacoes_credito
 //   PRIMARY KEY solicitacoes_credito_pkey: PRIMARY KEY (id)
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: devolutivas
+//   Policy "Allow all for anon" (ALL, PERMISSIVE) roles={anon}
+//     WITH CHECK: true
 // Table: solicitacoes_credito
 //   Policy "Allow insert for all" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
