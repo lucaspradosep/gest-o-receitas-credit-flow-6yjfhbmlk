@@ -15,6 +15,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Send } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  'https://qyhujieslzbbfrvyrhtw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5aHVqaWVzbHpiYmZydnlyaHR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODc0MjQsImV4cCI6MjA5MjQ2MzQyNH0.6DnX2J6chSaU9SL3G7GNxxm2I5914agRnFiEmsPqvj8',
+)
 
 export default function Feedback() {
   const { credits, updateCreditStatus } = useCredit()
@@ -46,64 +52,43 @@ export default function Feedback() {
     setCreditValue(credit.value || 0)
   }
 
- const handleSubmit = async () => {
-  if (!selectedCredit) return
+  const handleSubmit = async () => {
+    if (!selectedCredit) return
 
-  if (!status || status === 'Pendente') {
-    toast.error('Selecione Aprovado ou Reprovado para prosseguir.')
-    return
-  }
+    if (!status || status === 'Pendente') {
+      toast.error('Selecione Aprovado ou Reprovado para prosseguir.')
+      return
+    }
 
-  if (status === 'Reprovado' && denialReasons.length === 0) {
-    toast.error('Selecione ao menos um motivo da reprovação.')
-    return
-  }
+    if (status === 'Reprovado' && denialReasons.length === 0) {
+      toast.error('Selecione ao menos um motivo da reprovação.')
+      return
+    }
 
-  // 🔹 MANTÉM SUA LÓGICA ORIGINAL
-  updateCreditStatus(selectedCredit.id, {
-    status,
-    denialReasons: status === 'Reprovado' ? denialReasons : undefined,
-    requiresFollowUp: status === 'Aprovado' ? requiresFollowUp : false,
-    additionalInfo,
-    infoRequestDate,
-    value: creditValue,
-    analysisDate: new Date().toISOString(),
-  })
+    await supabase.from('devolutivas').insert([
+      {
+        solicitacao_id: selectedCredit.id,
+        nome_do_cliente: selectedCredit.clientName,
+        email_do_solicitante: selectedCredit.requesterEmail,
+        status: status,
+        valor: creditValue,
+        requer_acompanhamento: status === 'Aprovado' ? requiresFollowUp : false,
+        motivos_da_negacao: status === 'Reprovado' ? denialReasons.join(', ') : null,
+        informacoes_adicionais: additionalInfo || null,
+        data_da_solicitacao_de: infoRequestDate || null,
+        data_da_analise: new Date().toISOString(),
+      },
+    ])
 
-  // 🔥 NOVO: SALVAR NO BANCO
-  const { error } = await supabase.from('devolutivas').insert([
-    {
-      solicitacao_id: selectedCredit.id,
-      nome_do_cliente: selectedCredit.clientName,
-      email_do_solicitante: selectedCredit.requesterEmail,
-      status: status,
-      valor: creditValue,
-      requer_acompanhamento: requiresFollowUp,
-      motivos_da_negacao: status === 'Reprovado' ? denialReasons.join(', ') : null,
-      informacoes_adicionais: additionalInfo,
-      data_da_solicitacao_de_info: infoRequestDate || null,
-      data_de_analise: new Date().toISOString(),
-      criado_em: new Date().toISOString(),
-    },
-  ])
-
-  if (error) {
-    console.error(error)
-    toast.error('Erro ao salvar no banco')
-    return
-  }
-
-  // 🔹 MANTÉM SEU COMPORTAMENTO
-  if (sendEmail) {
-    toast.success('Devolutiva enviada!', {
-      description: `E-mail de confirmação enviado para ${selectedCredit.requesterEmail}.`,
+    updateCreditStatus(selectedCredit.id, {
+      status,
+      denialReasons: status === 'Reprovado' ? denialReasons : undefined,
+      requiresFollowUp: status === 'Aprovado' ? requiresFollowUp : false,
+      additionalInfo,
+      infoRequestDate,
+      value: creditValue,
+      analysisDate: new Date().toISOString(),
     })
-  } else {
-    toast.success('Status atualizado com sucesso (sem e-mail).')
-  }
-
-  setSelectedCreditId(null)
-}
 
     if (sendEmail) {
       toast.success('Devolutiva enviada!', {
