@@ -12,7 +12,7 @@ import { toast } from 'sonner'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Send } from 'lucide-react'
+import { Send, FileText, ExternalLink } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase/client'
@@ -208,6 +208,57 @@ export default function Feedback() {
                       className="bg-muted text-muted-foreground"
                     />
                   </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>CNPJ</Label>
+                      <Input
+                        value={selectedCredit.document}
+                        readOnly
+                        className="bg-muted text-muted-foreground"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Empresa / Unidade</Label>
+                      <Input
+                        value={`${selectedCredit.empresa} - ${selectedCredit.unidadeNegocio}`}
+                        readOnly
+                        className="bg-muted text-muted-foreground"
+                      />
+                    </div>
+                  </div>
+
+                  {selectedCredit.notes && (
+                    <div className="space-y-2">
+                      <Label>Observações do Pedido</Label>
+                      <Textarea
+                        value={selectedCredit.notes}
+                        readOnly
+                        className="bg-muted text-muted-foreground resize-none h-auto min-h-[60px]"
+                      />
+                    </div>
+                  )}
+
+                  {selectedCredit.documentation && (
+                    <div className="space-y-2">
+                      <Label>Documentação Complementar</Label>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+                        asChild
+                      >
+                        <a
+                          href={selectedCredit.documentation}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Visualizar / Baixar Documento Anexo
+                          <ExternalLink className="h-3 w-3 ml-2 opacity-50" />
+                        </a>
+                      </Button>
+                    </div>
+                  )}
 
                   <div className="space-y-3 pt-4 border-t">
                     <Label className="text-base font-semibold">Status da Análise *</Label>

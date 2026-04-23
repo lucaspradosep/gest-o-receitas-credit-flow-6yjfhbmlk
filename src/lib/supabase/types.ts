@@ -56,10 +56,12 @@ export type Database = {
       }
       solicitacoes_credito: {
         Row: {
+          cep: string | null
           client_name: string | null
           created_at: string | null
           delivery_address: string | null
           document: string | null
+          documentation: string | null
           empresa: string | null
           id: string
           notes: string | null
@@ -70,10 +72,12 @@ export type Database = {
           value: number | null
         }
         Insert: {
+          cep?: string | null
           client_name?: string | null
           created_at?: string | null
           delivery_address?: string | null
           document?: string | null
+          documentation?: string | null
           empresa?: string | null
           id?: string
           notes?: string | null
@@ -84,10 +88,12 @@ export type Database = {
           value?: number | null
         }
         Update: {
+          cep?: string | null
           client_name?: string | null
           created_at?: string | null
           delivery_address?: string | null
           document?: string | null
+          documentation?: string | null
           empresa?: string | null
           id?: string
           notes?: string | null
@@ -272,6 +278,8 @@ export const Constants = {
 //   quantity: integer (nullable)
 //   delivery_address: text (nullable)
 //   notes: text (nullable)
+//   cep: text (nullable)
+//   documentation: text (nullable)
 
 // --- CONSTRAINTS ---
 // Table: devolutivas
