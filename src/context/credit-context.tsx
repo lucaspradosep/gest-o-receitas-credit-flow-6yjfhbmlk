@@ -20,7 +20,10 @@ export function CreditProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchCredits = async () => {
       const { data: solicitacoes } = await supabase.from('solicitacoes_credito').select('*')
-      const { data: devolutivas } = await supabase.from('devolutivas').select('*')
+      const { data: devolutivas } = await supabase
+        .from('devolutivas')
+        .select('*')
+        .order('created_at', { ascending: false })
 
       if (solicitacoes && solicitacoes.length > 0) {
         const mapped = solicitacoes.map((s) => {

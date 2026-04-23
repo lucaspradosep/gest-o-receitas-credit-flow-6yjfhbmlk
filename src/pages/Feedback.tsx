@@ -34,7 +34,9 @@ export default function Feedback() {
     return <Navigate to="/nova-analise" replace />
   }
 
-  const pendingCredits = credits.filter((c) => c.status === 'Pendente')
+  const pendingCredits = credits.filter(
+    (c) => c.status === 'Pendente' || c.status === 'Mais Documentações',
+  )
   const selectedCredit = credits.find((c) => c.id === selectedCreditId)
 
   const handleSelect = (credit: CreditRequest) => {
@@ -51,12 +53,17 @@ export default function Feedback() {
     if (!selectedCredit) return
 
     if (!status || status === 'Pendente') {
-      toast.error('Selecione Aprovado ou Reprovado para prosseguir.')
+      toast.error('Selecione um status para prosseguir.')
       return
     }
 
     if (status === 'Reprovado' && denialReasons.length === 0) {
       toast.error('Selecione ao menos um motivo da reprovação.')
+      return
+    }
+
+    if (status === 'Mais Documentações' && !additionalInfo.trim()) {
+      toast.error('Preencha o campo Retorno / Notas Internas informando os documentos faltantes.')
       return
     }
 
@@ -135,9 +142,19 @@ export default function Feedback() {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className="font-semibold truncate pr-2">{credit.clientName}</span>
-                    <Badge variant="secondary" className="text-xs shrink-0">
-                      {formatDateTime(credit.createdAt).split(' ')[0]}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <Badge variant="secondary" className="text-xs">
+                        {formatDateTime(credit.createdAt).split(' ')[0]}
+                      </Badge>
+                      {credit.status === 'Mais Documentações' && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-amber-600 border-amber-300 bg-amber-50 py-0 leading-none h-4"
+                        >
+                          Falta Docs
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>{formatCurrency(credit.value)}</span>
@@ -277,6 +294,12 @@ export default function Feedback() {
                         <RadioGroupItem value="Reprovado" id="status-reprovado" />
                         <Label htmlFor="status-reprovado" className="font-medium cursor-pointer">
                           Reprovado
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Mais Documentações" id="status-mais-docs" />
+                        <Label htmlFor="status-mais-docs" className="font-medium cursor-pointer">
+                          Solicitar mais documentações
                         </Label>
                       </div>
                     </RadioGroup>
