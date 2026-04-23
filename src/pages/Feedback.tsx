@@ -46,7 +46,7 @@ export default function Feedback() {
     setSelectedCreditId(credit.id)
     setStatus(credit.status === 'Pendente' ? '' : credit.status)
     setRequiresFollowUp(credit.requiresFollowUp || false)
-    setDenialReasons(credit.denialReasons || (credit.denialReason ? [credit.denialReason] : []))
+    setDenialReasons([])
     setAdditionalInfo(credit.additionalInfo || '')
     setInfoRequestDate(credit.infoRequestDate || '')
     setCreditValue(credit.value || 0)
@@ -99,6 +99,12 @@ export default function Feedback() {
     }
 
     setSelectedCreditId(null)
+    setStatus('')
+    setDenialReasons([])
+    setAdditionalInfo('')
+    setInfoRequestDate('')
+    setCreditValue(0)
+    setRequiresFollowUp(false)
   }
 
   return (
