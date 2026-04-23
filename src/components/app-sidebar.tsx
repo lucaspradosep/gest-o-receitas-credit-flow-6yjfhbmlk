@@ -37,7 +37,7 @@ export function AppSidebar() {
         <div className="bg-primary text-primary-foreground p-2 rounded-md">
           <ShieldCheck size={24} />
         </div>
-        <div className="font-bold text-lg text-primary tracking-tight">CreditFlow</div>
+        <div className="font-bold text-lg text-primary tracking-tight">CreditFlow Grupo John</div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

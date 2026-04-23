@@ -24,7 +24,7 @@ const routeTitles: Record<string, string> = {
 
 export function AppHeader() {
   const location = useLocation()
-  const title = routeTitles[location.pathname] || 'CreditFlow'
+  const title = routeTitles[location.pathname] || 'CreditFlow Grupo John'
   const { role, setRole, isAuthenticated, setIsAuthenticated } = useRole()
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const navigate = useNavigate()
