@@ -46,28 +46,64 @@ export default function Feedback() {
     setCreditValue(credit.value || 0)
   }
 
-  const handleSubmit = () => {
-    if (!selectedCredit) return
+ const handleSubmit = async () => {
+  if (!selectedCredit) return
 
-    if (!status || status === 'Pendente') {
-      toast.error('Selecione Aprovado ou Reprovado para prosseguir.')
-      return
-    }
+  if (!status || status === 'Pendente') {
+    toast.error('Selecione Aprovado ou Reprovado para prosseguir.')
+    return
+  }
 
-    if (status === 'Reprovado' && denialReasons.length === 0) {
-      toast.error('Selecione ao menos um motivo da reprovação.')
-      return
-    }
+  if (status === 'Reprovado' && denialReasons.length === 0) {
+    toast.error('Selecione ao menos um motivo da reprovação.')
+    return
+  }
 
-    updateCreditStatus(selectedCredit.id, {
-      status,
-      denialReasons: status === 'Reprovado' ? denialReasons : undefined,
-      requiresFollowUp: status === 'Aprovado' ? requiresFollowUp : false,
-      additionalInfo,
-      infoRequestDate,
-      value: creditValue,
-      analysisDate: new Date().toISOString(),
+  // 🔹 MANTÉM SUA LÓGICA ORIGINAL
+  updateCreditStatus(selectedCredit.id, {
+    status,
+    denialReasons: status === 'Reprovado' ? denialReasons : undefined,
+    requiresFollowUp: status === 'Aprovado' ? requiresFollowUp : false,
+    additionalInfo,
+    infoRequestDate,
+    value: creditValue,
+    analysisDate: new Date().toISOString(),
+  })
+
+  // 🔥 NOVO: SALVAR NO BANCO
+  const { error } = await supabase.from('devolutivas').insert([
+    {
+      solicitacao_id: selectedCredit.id,
+      nome_do_cliente: selectedCredit.clientName,
+      email_do_solicitante: selectedCredit.requesterEmail,
+      status: status,
+      valor: creditValue,
+      requer_acompanhamento: requiresFollowUp,
+      motivos_da_negacao: status === 'Reprovado' ? denialReasons.join(', ') : null,
+      informacoes_adicionais: additionalInfo,
+      data_da_solicitacao_de_info: infoRequestDate || null,
+      data_de_analise: new Date().toISOString(),
+      criado_em: new Date().toISOString(),
+    },
+  ])
+
+  if (error) {
+    console.error(error)
+    toast.error('Erro ao salvar no banco')
+    return
+  }
+
+  // 🔹 MANTÉM SEU COMPORTAMENTO
+  if (sendEmail) {
+    toast.success('Devolutiva enviada!', {
+      description: `E-mail de confirmação enviado para ${selectedCredit.requesterEmail}.`,
     })
+  } else {
+    toast.success('Status atualizado com sucesso (sem e-mail).')
+  }
+
+  setSelectedCreditId(null)
+}
 
     if (sendEmail) {
       toast.success('Devolutiva enviada!', {
