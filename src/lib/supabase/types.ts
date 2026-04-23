@@ -249,7 +249,7 @@ export const Constants = {
 // Table: devolutivas
 //   id: uuid (not null, default: gen_random_uuid())
 //   created_at: timestamp with time zone (nullable, default: now())
-//   solicitacao_id: uuid (nullable)
+//   solicitacao_id: text (nullable)
 //   client_name: text (nullable)
 //   requester_email: text (nullable)
 //   status: text (nullable)
@@ -282,6 +282,7 @@ export const Constants = {
 // --- ROW LEVEL SECURITY POLICIES ---
 // Table: devolutivas
 //   Policy "Allow all for anon" (ALL, PERMISSIVE) roles={anon}
+//     USING: true
 //     WITH CHECK: true
 // Table: solicitacoes_credito
 //   Policy "Allow insert for all" (INSERT, PERMISSIVE) roles={anon}

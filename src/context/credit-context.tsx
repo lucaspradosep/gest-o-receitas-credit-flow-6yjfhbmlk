@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { CreditRequest } from '@/types/credit'
+import { supabase } from '@/lib/supabase/client'
 
 interface CreditContextType {
   credits: CreditRequest[]
@@ -84,15 +85,82 @@ const CreditContext = createContext<CreditContextType | undefined>(undefined)
 export function CreditProvider({ children }: { children: ReactNode }) {
   const [credits, setCredits] = useState<CreditRequest[]>(mockData)
 
-  const addCredit = (creditData: any) => {
-    const newCredit: CreditRequest = {
-      ...creditData,
-      id: `CRD-${String(credits.length + 1).padStart(3, '0')}`,
-      status: 'Pendente',
-      createdAt: new Date().toISOString(),
-      requiresFollowUp: false,
+  useEffect(() => {
+    const fetchCredits = async () => {
+      const { data: solicitacoes } = await supabase.from('solicitacoes_credito').select('*')
+      const { data: devolutivas } = await supabase.from('devolutivas').select('*')
+
+      if (solicitacoes && solicitacoes.length > 0) {
+        const mapped = solicitacoes.map((s) => {
+          const devolutiva = devolutivas?.find((d) => d.solicitacao_id === s.id)
+          return {
+            id: s.id,
+            clientName: s.client_name || '',
+            document: s.document || '',
+            value: Number(s.value) || 0,
+            quantity: s.quantity || 1,
+            deliveryAddress: s.delivery_address || '',
+            requesterEmail: s.requester_email || '',
+            empresa: s.empresa || '',
+            uf: s.uf || '',
+            unidadeNegocio: s.unidade_negocio || '',
+            status: devolutiva ? devolutiva.status : 'Pendente',
+            requiresFollowUp: devolutiva ? devolutiva.requires_follow_up : false,
+            createdAt: s.created_at || new Date().toISOString(),
+            analysisDate: devolutiva ? devolutiva.analysis_date : undefined,
+            denialReasons: devolutiva ? devolutiva.denial_reasons : undefined,
+            additionalInfo: devolutiva ? devolutiva.additional_info : undefined,
+            infoRequestDate: devolutiva ? devolutiva.info_request_date : undefined,
+          } as CreditRequest
+        })
+
+        setCredits(
+          mapped.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+        )
+      }
     }
-    setCredits((prev) => [newCredit, ...prev])
+
+    fetchCredits()
+  }, [])
+
+  const addCredit = async (creditData: any) => {
+    const { data, error } = await supabase
+      .from('solicitacoes_credito')
+      .insert([
+        {
+          client_name: creditData.clientName,
+          document: creditData.document,
+          value: creditData.value,
+          quantity: creditData.quantity,
+          delivery_address: creditData.deliveryAddress,
+          requester_email: creditData.requesterEmail,
+          empresa: creditData.empresa,
+          uf: creditData.uf,
+          unidade_negocio: creditData.unidadeNegocio,
+        },
+      ])
+      .select()
+      .single()
+
+    if (data) {
+      const newCredit: CreditRequest = {
+        ...creditData,
+        id: data.id,
+        status: 'Pendente',
+        createdAt: data.created_at || new Date().toISOString(),
+        requiresFollowUp: false,
+      }
+      setCredits((prev) => [newCredit, ...prev])
+    } else {
+      const newCredit: CreditRequest = {
+        ...creditData,
+        id: `CRD-${String(credits.length + 1).padStart(3, '0')}`,
+        status: 'Pendente',
+        createdAt: new Date().toISOString(),
+        requiresFollowUp: false,
+      }
+      setCredits((prev) => [newCredit, ...prev])
+    }
   }
 
   const updateCreditStatus = (id: string, updates: Partial<CreditRequest>) => {

@@ -15,12 +15,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Send } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  'https://qyhujieslzbbfrvyrhtw.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5aHVqaWVzbHpiYmZydnlyaHR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODc0MjQsImV4cCI6MjA5MjQ2MzQyNH0.6DnX2J6chSaU9SL3G7GNxxm2I5914agRnFiEmsPqvj8',
-)
+import { supabase } from '@/lib/supabase/client'
 
 export default function Feedback() {
   const { credits, updateCreditStatus } = useCredit()
