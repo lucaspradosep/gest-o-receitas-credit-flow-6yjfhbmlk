@@ -68,15 +68,15 @@ export default function Feedback() {
     await supabase.from('devolutivas').insert([
       {
         solicitacao_id: selectedCredit.id,
-        nome_do_cliente: selectedCredit.clientName,
-        email_do_solicitante: selectedCredit.requesterEmail,
-        status: status,
-        valor: creditValue,
-        requer_acompanhamento: status === 'Aprovado' ? requiresFollowUp : false,
-        motivos_da_negacao: status === 'Reprovado' ? denialReasons.join(', ') : null,
-        informacoes_adicionais: additionalInfo || null,
-        data_da_solicitacao_de: infoRequestDate || null,
-        data_da_analise: new Date().toISOString(),
+        client_name: selectedCredit.clientName,
+        requester_email: selectedCredit.requesterEmail,
+        status,
+        value: creditValue,
+        requires_follow_up: status === 'Aprovado' ? requiresFollowUp : false,
+        denial_reasons: status === 'Reprovado' ? denialReasons : [],
+        additional_info: additionalInfo || null,
+        info_request_date: infoRequestDate || null,
+        analysis_date: new Date().toISOString(),
       },
     ])
 
