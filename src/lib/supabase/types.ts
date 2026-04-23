@@ -287,3 +287,5 @@ export const Constants = {
 // Table: solicitacoes_credito
 //   Policy "Allow insert for all" (INSERT, PERMISSIVE) roles={anon}
 //     WITH CHECK: true
+//   Policy "Allow select for all" (SELECT, PERMISSIVE) roles={public}
+//     USING: true

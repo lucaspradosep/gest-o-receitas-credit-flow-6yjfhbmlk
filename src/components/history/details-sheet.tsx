@@ -75,9 +75,10 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
               <DetailItem label="Unidade de Negócio" value={credit.unidadeNegocio} />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <DetailItem label="CNPJ" value={credit.document} />
               <DetailItem label="UF" value={credit.uf} />
+              {credit.cep && <DetailItem label="CEP" value={credit.cep} />}
             </div>
 
             <DetailItem label="Endereço de Entrega" value={credit.deliveryAddress} />
@@ -89,12 +90,14 @@ export function DetailsSheet({ credit, onClose }: DetailsSheetProps) {
               {credit.documentation && (
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Documentação Complementar</Label>
-                  <div className="text-sm p-3 rounded-md border bg-muted/50 flex items-center gap-2">
-                    <span className="truncate">
-                      {credit.documentation.split('\\').pop()?.split('/').pop() ||
-                        'Documento anexado'}
-                    </span>
-                  </div>
+                  <a
+                    href={credit.documentation}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm p-3 rounded-md border bg-muted/50 flex items-center gap-2 hover:bg-muted transition-colors text-primary underline"
+                  >
+                    <span className="truncate">Visualizar/Baixar Documento</span>
+                  </a>
                 </div>
               )}
               {credit.notes && (

@@ -8,82 +8,14 @@ interface CreditContextType {
     credit: Omit<CreditRequest, 'id' | 'status' | 'createdAt' | 'requiresFollowUp'> & {
       requiresFollowUp?: boolean
     },
-  ) => void
+  ) => Promise<void>
   updateCreditStatus: (id: string, updates: Partial<CreditRequest>) => void
 }
-
-const mockData: CreditRequest[] = [
-  {
-    id: 'CRD-001',
-    clientName: 'Tech Solutions Ltda',
-    document: '12.345.678/0001-90',
-    value: 125000.0,
-    quantity: 10,
-    deliveryAddress: 'Av. Paulista, 1000 - SP',
-    requesterEmail: 'carlos@vendas.com',
-    empresa: 'JOHN',
-    uf: 'SP',
-    unidadeNegocio: 'Vendas Corporativas',
-    status: 'Aprovado',
-    requiresFollowUp: false,
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    analysisDate: new Date(Date.now() - 86400000 * 1).toISOString(),
-  },
-  {
-    id: 'CRD-002',
-    clientName: 'Comercial Albuquerque',
-    document: '98.765.432/0001-10',
-    value: 45000.0,
-    quantity: 2,
-    deliveryAddress: 'Rua do Comércio, 500 - RJ',
-    requesterEmail: 'ana@vendas.com',
-    empresa: 'TUIM',
-    uf: 'RJ',
-    unidadeNegocio: 'Varejo',
-    status: 'Reprovado',
-    denialReasons: ['Score Baixo', 'Inadimplência na Praça'],
-    requiresFollowUp: false,
-    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-    analysisDate: new Date().toISOString(),
-  },
-  {
-    id: 'CRD-003',
-    clientName: 'Indústrias Mendes',
-    document: '45.123.890/0001-55',
-    value: 320000.0,
-    quantity: 5,
-    deliveryAddress: 'Distrito Industrial, S/N - MG',
-    requesterEmail: 'marcos@vendas.com',
-    empresa: 'JOHN',
-    uf: 'MG',
-    unidadeNegocio: 'Indústria',
-    status: 'Pendente',
-    requiresFollowUp: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'CRD-004',
-    clientName: 'Alpha Services',
-    document: '33.123.456/0001-88',
-    value: 85000.0,
-    quantity: 12,
-    deliveryAddress: 'Av. Brasil, 200 - SP',
-    requesterEmail: 'joao@vendas.com',
-    empresa: 'TUIM',
-    uf: 'SP',
-    unidadeNegocio: 'Serviços',
-    status: 'Aprovado',
-    requiresFollowUp: true,
-    additionalInfo: 'Monitorar pagamentos dos primeiros 3 meses.',
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    analysisDate: new Date(Date.now() - 86400000 * 4).toISOString(),
-  },
-]
 
 const CreditContext = createContext<CreditContextType | undefined>(undefined)
 
 export function CreditProvider({ children }: { children: ReactNode }) {
-  const [credits, setCredits] = useState<CreditRequest[]>(mockData)
+  const [credits, setCredits] = useState<CreditRequest[]>([])
 
   useEffect(() => {
     const fetchCredits = async () => {
@@ -103,7 +35,10 @@ export function CreditProvider({ children }: { children: ReactNode }) {
             requesterEmail: s.requester_email || '',
             empresa: s.empresa || '',
             uf: s.uf || '',
+            cep: s.cep || undefined,
             unidadeNegocio: s.unidade_negocio || '',
+            notes: s.notes || undefined,
+            documentation: s.documentation || undefined,
             status: devolutiva ? devolutiva.status : 'Pendente',
             requiresFollowUp: devolutiva ? devolutiva.requires_follow_up : false,
             createdAt: s.created_at || new Date().toISOString(),
@@ -136,7 +71,10 @@ export function CreditProvider({ children }: { children: ReactNode }) {
           requester_email: creditData.requesterEmail,
           empresa: creditData.empresa,
           uf: creditData.uf,
+          cep: creditData.cep || null,
           unidade_negocio: creditData.unidadeNegocio,
+          notes: creditData.notes || null,
+          documentation: creditData.documentation || null,
         },
       ])
       .select()
@@ -144,19 +82,21 @@ export function CreditProvider({ children }: { children: ReactNode }) {
 
     if (data) {
       const newCredit: CreditRequest = {
-        ...creditData,
         id: data.id,
+        clientName: data.client_name || '',
+        document: data.document || '',
+        value: Number(data.value) || 0,
+        quantity: data.quantity || 1,
+        deliveryAddress: data.delivery_address || '',
+        requesterEmail: data.requester_email || '',
+        empresa: data.empresa || '',
+        uf: data.uf || '',
+        cep: data.cep || undefined,
+        unidadeNegocio: data.unidade_negocio || '',
+        notes: data.notes || undefined,
+        documentation: data.documentation || undefined,
         status: 'Pendente',
         createdAt: data.created_at || new Date().toISOString(),
-        requiresFollowUp: false,
-      }
-      setCredits((prev) => [newCredit, ...prev])
-    } else {
-      const newCredit: CreditRequest = {
-        ...creditData,
-        id: `CRD-${String(credits.length + 1).padStart(3, '0')}`,
-        status: 'Pendente',
-        createdAt: new Date().toISOString(),
         requiresFollowUp: false,
       }
       setCredits((prev) => [newCredit, ...prev])

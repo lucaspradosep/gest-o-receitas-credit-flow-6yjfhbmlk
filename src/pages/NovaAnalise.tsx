@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Form,
@@ -24,11 +24,6 @@ import {
 } from '@/components/ui/select'
 import { useCredit } from '@/context/credit-context'
 import { SubmissionModal } from '@/components/form/submission-modal'
-
-const supabase = createClient(
-  'https://qyhujieslzbbfrvyrhtw.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5aHVqaWVzbHpiYmZydnlyaHR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODc0MjQsImV4cCI6MjA5MjQ2MzQyNH0.6DnX2J6chSaU9SL3G7GNxxm2I5914agRnFiEmsPqvj8',
-)
 
 const UFS = [
   'AC',
@@ -66,6 +61,7 @@ const formSchema = z.object({
   document: z.string().min(14, 'CNPJ inválido (mín. 14 caracteres)'),
   empresa: z.string().min(1, 'Selecione a empresa'),
   uf: z.string().min(2, 'Selecione a UF'),
+  cep: z.string().optional(),
   unidadeNegocio: z.string().min(1, 'Unidade de Negócio é obrigatória'),
   value: z.coerce.number().min(1, 'Valor deve ser maior que 0'),
   quantity: z.coerce.number().min(1, 'Quantidade deve ser maior que 0'),
@@ -88,6 +84,7 @@ export default function NovaAnalise() {
       document: '',
       empresa: '',
       uf: '',
+      cep: '',
       unidadeNegocio: '',
       value: undefined,
       quantity: 1,
@@ -99,23 +96,31 @@ export default function NovaAnalise() {
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
-    await supabase.from('solicitacoes_credito').insert([
-      {
-        requester_email: data.requesterEmail,
-        client_name: data.clientName,
-        document: data.document,
-        empresa: data.empresa,
-        uf: data.uf,
-        unidade_negocio: data.unidadeNegocio,
-        value: data.value,
-        quantity: data.quantity,
-        delivery_address: data.deliveryAddress,
-        notes: data.notes ?? null,
-      },
-    ])
-    setTimeout(() => {
-      addCredit(data)
-    }, 4000)
+
+    let documentationUrl = undefined
+
+    if (data.documentation && data.documentation instanceof File) {
+      const file = data.documentation
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
+      const filePath = `solicitacoes/${fileName}`
+
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file)
+
+      if (!uploadError && uploadData) {
+        const { data: publicUrlData } = supabase.storage.from('documents').getPublicUrl(filePath)
+        documentationUrl = publicUrlData.publicUrl
+      }
+    }
+
+    const payload = {
+      ...data,
+      documentation: documentationUrl,
+    }
+
+    await addCredit(payload)
   }
 
   const handleSuccessClose = () => {
@@ -223,7 +228,6 @@ export default function NovaAnalise() {
                     )}
                   />
 
-                  {/* Novas segmentações */}
                   <FormField
                     control={form.control}
                     name="empresa"
@@ -258,30 +262,46 @@ export default function NovaAnalise() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="uf"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>UF (Estado de Entrega) *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+
+                  <div className="grid grid-cols-2 gap-4 md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="uf"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>UF (Estado de Entrega) *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {UFS.map((uf) => (
+                                <SelectItem key={uf} value={uf}>
+                                  {uf}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cep"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CEP (Opcional)</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione..." />
-                            </SelectTrigger>
+                            <Input placeholder="00000-000" {...field} />
                           </FormControl>
-                          <SelectContent>
-                            {UFS.map((uf) => (
-                              <SelectItem key={uf} value={uf}>
-                                {uf}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}
@@ -306,7 +326,7 @@ export default function NovaAnalise() {
                           <Input
                             type="file"
                             accept=".pdf,.doc,.docx,.png,.jpg"
-                            onChange={(e) => onChange(e.target.value)}
+                            onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
                             {...field}
                           />
                         </FormControl>
@@ -342,6 +362,7 @@ export default function NovaAnalise() {
                   type="submit"
                   size="lg"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8"
+                  disabled={isSubmitting}
                 >
                   Enviar Solicitação
                 </Button>

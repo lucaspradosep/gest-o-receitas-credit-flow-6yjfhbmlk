@@ -11,6 +11,7 @@ export interface CreditRequest {
 
   empresa: string
   uf: string
+  cep?: string
   unidadeNegocio: string
 
   status: CreditStatus
